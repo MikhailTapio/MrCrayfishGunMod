@@ -26,7 +26,7 @@ public class LivingEntityMixin
         this.cgm$source = source;
     }
 
-    @ModifyArg(method = "hurt", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;knockback(DDD)V"), index = 0)
+    @ModifyArg(method = "hurt", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;knockback(DDD)V"), index = 0, require = 0)
     private double modifyApplyKnockbackArgs(double original)
     {
         if(this.cgm$source.getDirectEntity() instanceof ProjectileEntity)

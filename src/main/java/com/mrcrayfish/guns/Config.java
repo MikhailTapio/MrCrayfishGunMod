@@ -160,6 +160,7 @@ public class Config
     public static class Common
     {
         public final Gameplay gameplay;
+        public final Compatibilities compatibilities;
         public final Network network;
         public final AggroMobs aggroMobs;
         public final Missiles missiles;
@@ -172,6 +173,7 @@ public class Config
             builder.push("common");
             {
                 this.gameplay = new Gameplay(builder);
+                this.compatibilities = new Compatibilities(builder);
                 this.network = new Network(builder);
                 this.aggroMobs = new AggroMobs(builder);
                 this.missiles = new Missiles(builder);
@@ -213,6 +215,20 @@ public class Config
                 this.knockbackStrength = builder.comment("Sets the strength of knockback when shot by a bullet projectile. Knockback must be enabled for this to take effect. If value is equal to zero, knockback will use default minecraft value").defineInRange("knockbackStrength", 0.15, 0.0, 1.0);
                 this.improvedHitboxes = builder.comment("If true, improves the accuracy of weapons by considering the ping of the player. This has no affect on singleplayer. This will add a little overhead if enabled.").define("improvedHitboxes", false);
                 this.projectileSlowDownInFluids = builder.comment("If true, the projectiles will slow down in the fluids.").define("projectileSlowDownInFluids", true);
+            }
+            builder.pop();
+        }
+    }
+
+    public static class Compatibilities {
+        public final ForgeConfigSpec.BooleanValue backpackedNeedsEnchantment2ReloadFromBackpack;
+
+        public Compatibilities(ForgeConfigSpec.Builder builder) {
+            builder.comment("Properties relating to cross-mod compatibilities").push("compatibilities");
+            {
+                this.backpackedNeedsEnchantment2ReloadFromBackpack = builder
+                        .comment("When enabled, you'll need the \"Marksman\" enchantment enchanted for a backpack from backpacked mod to directly reload from the backpack.")
+                        .define("backpackedNeedsEnchantment2ReloadFromBackpack", true);
             }
             builder.pop();
         }

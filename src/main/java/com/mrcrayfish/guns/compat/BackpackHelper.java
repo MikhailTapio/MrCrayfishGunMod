@@ -3,6 +3,7 @@ package com.mrcrayfish.guns.compat;
 import com.mrcrayfish.backpacked.core.ModEnchantments;
 import com.mrcrayfish.backpacked.inventory.BackpackInventory;
 import com.mrcrayfish.backpacked.inventory.BackpackedInventoryAccess;
+import com.mrcrayfish.guns.Config;
 import com.mrcrayfish.guns.common.AmmoContext;
 import com.mrcrayfish.guns.common.Gun;
 import net.minecraft.resources.ResourceLocation;
@@ -27,7 +28,7 @@ public class BackpackHelper
         if(backpack.isEmpty())
             return AmmoContext.NONE;
 
-        if(EnchantmentHelper.getTagEnchantmentLevel(ModEnchantments.MARKSMAN.get(), backpack) <= 0)
+        if (!Config.COMMON.compatibilities.backpackedNeedsEnchantment2ReloadFromBackpack.get() && EnchantmentHelper.getTagEnchantmentLevel(ModEnchantments.MARKSMAN.get(), backpack) <= 0)
             return AmmoContext.NONE;
 
 
