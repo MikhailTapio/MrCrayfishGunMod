@@ -1,6 +1,5 @@
 package com.mrcrayfish.guns.compat;
 
-import com.mrcrayfish.backpacked.Backpacked;
 import com.mrcrayfish.backpacked.core.ModEnchantments;
 import com.mrcrayfish.backpacked.inventory.BackpackInventory;
 import com.mrcrayfish.backpacked.inventory.BackpackedInventoryAccess;
@@ -18,7 +17,7 @@ public class BackpackHelper
 {
     public static AmmoContext findAmmo(Player player, ResourceLocation id)
     {
-        BackpackInventory inventory = ((BackpackedInventoryAccess) player).getBackpackedInventory();
+        BackpackInventory inventory = ((BackpackedInventoryAccess) player).backpacked$GetBackpackInventory();
 
         if(inventory == null)
             return AmmoContext.NONE;
