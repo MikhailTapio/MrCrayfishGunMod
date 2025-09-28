@@ -57,7 +57,7 @@ public class L2BackpackHelper {
         for (int i = 0; i < inv.size(); i++) {
             final ItemStack stack = inv.get(i);
             if(!Gun.isAmmo(stack, id)) continue;
-            return new AmmoContext(stack, () -> BaseBagItem.setItems(bagStack, inv));
+            return new AmmoContext(stack, s -> BaseBagItem.setItems(bagStack, inv));
         }
         return AmmoContext.NONE;
     }

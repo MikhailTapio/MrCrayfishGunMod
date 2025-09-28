@@ -92,7 +92,7 @@ public class ReloadTracker
             }
             ammo.shrink(amount);
             // Trigger the post action on ammo consumption, like Container#setChanged.
-            context.onConsume().run();
+            context.onConsume().accept(ammo);
         }
 
         ResourceLocation reloadSound = this.gun.getSounds().getReload();
