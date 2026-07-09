@@ -221,14 +221,14 @@ public class Config
     }
 
     public static class Compatibilities {
-        public final ForgeConfigSpec.BooleanValue backpackedNeedsEnchantment2ReloadFromBackpack;
+        public final ForgeConfigSpec.BooleanValue backpackedNeedsQuiverLink2ReloadFromBackpack;
 
         public Compatibilities(ForgeConfigSpec.Builder builder) {
             builder.comment("Properties relating to cross-mod compatibilities").push("compatibilities");
             {
-                this.backpackedNeedsEnchantment2ReloadFromBackpack = builder
-                        .comment("When enabled, you'll need the \"Marksman\" enchantment enchanted for a backpack from backpacked mod to directly reload from the backpack.")
-                        .define("backpackedNeedsEnchantment2ReloadFromBackpack", true);
+                this.backpackedNeedsQuiverLink2ReloadFromBackpack = builder
+                        .comment("When enabled, a backpack from the Backpacked mod needs the \"Quiverlink\" augment installed to directly reload from the backpack.")
+                        .define("backpackedNeedsQuiverLink2ReloadFromBackpack", false);
             }
             builder.pop();
         }

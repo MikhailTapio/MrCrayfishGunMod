@@ -58,7 +58,7 @@ public class ReloadHandler
         {
             if(ModSyncedDataKeys.RELOADING.getValue(player))
             {
-                if(this.reloadingSlot != player.getInventory().selected)
+                if(this.reloadingSlot != player.getInventory().selected || this.isReloadFinished(player))
                 {
                     this.setReloading(false);
                 }
@@ -118,6 +118,28 @@ public class ReloadHandler
                 this.reloadingSlot = -1;
             }
         }
+    }
+
+    /**
+     * Client-side safety net for the case where the server's "reload finished" sync never
+     * reaches this client (e.g. a dropped/desynced {@code RELOADING} update). The held gun's
+     * ammo count is synced through the normal inventory updates, so we can independently detect
+     * that the magazine is full (or that the held item is no longer a gun) and stop the reload
+     * ourselves, instead of getting stuck in the reload animation until the player switches items.
+     *
+     * @param player the client player
+     * @return true if the reload should be stopped
+     */
+    private boolean isReloadFinished(Player player)
+    {
+        ItemStack stack = player.getMainHandItem();
+        if(!(stack.getItem() instanceof GunItem))
+            return true;
+        CompoundTag tag = stack.getTag();
+        if(tag == null || tag.contains("IgnoreAmmo", Tag.TAG_BYTE))
+            return false;
+        Gun gun = ((GunItem) stack.getItem()).getModifiedGun(stack);
+        return tag.getInt("AmmoCount") >= GunEnchantmentHelper.getAmmoCapacity(stack, gun);
     }
 
     private void updateReloadTimer(Player player)
