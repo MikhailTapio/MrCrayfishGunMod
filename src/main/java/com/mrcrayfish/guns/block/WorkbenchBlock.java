@@ -18,7 +18,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraftforge.network.NetworkHooks;
+import com.mojang.serialization.MapCodec;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -31,6 +31,11 @@ import java.util.Map;
  */
 public class WorkbenchBlock extends RotatedObjectBlock implements EntityBlock
 {
+    public static final MapCodec<WorkbenchBlock> CODEC = simpleCodec(WorkbenchBlock::new);
+
+    @Override
+    public MapCodec<WorkbenchBlock> codec() { return CODEC; }
+
     private final Map<BlockState, VoxelShape> SHAPES = new HashMap<>();
 
     public WorkbenchBlock(Block.Properties properties)
@@ -67,14 +72,14 @@ public class WorkbenchBlock extends RotatedObjectBlock implements EntityBlock
     }
 
     @Override
-    public InteractionResult use(BlockState state, Level world, BlockPos pos, Player playerEntity, InteractionHand hand, BlockHitResult result)
+    public InteractionResult useWithoutItem(BlockState state, Level world, BlockPos pos, Player playerEntity, BlockHitResult result)
     {
         if(!world.isClientSide())
         {
             BlockEntity tileEntity = world.getBlockEntity(pos);
             if(tileEntity instanceof MenuProvider)
             {
-                NetworkHooks.openScreen((ServerPlayer) playerEntity, (MenuProvider) tileEntity, pos);
+                playerEntity.openMenu((MenuProvider) tileEntity, pos);
             }
         }
         return InteractionResult.SUCCESS;

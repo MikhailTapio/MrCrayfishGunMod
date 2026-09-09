@@ -10,8 +10,8 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 
 import javax.annotation.Nullable;
 
@@ -86,7 +86,7 @@ public abstract class WeaponPose implements IHeldAnimation
         {
             return 0F;
         }
-        return Mth.lerp(Minecraft.getInstance().getFrameTime(), player.xRotO, player.getXRot()) / 90F;
+        return Mth.lerp(Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true), player.xRotO, player.getXRot()) / 90F;
     }
 
     private void applyAimPose(AimPose targetPose, ModelPart rightArm, ModelPart leftArm, float partial, float zoom, float offhand, boolean sneaking)

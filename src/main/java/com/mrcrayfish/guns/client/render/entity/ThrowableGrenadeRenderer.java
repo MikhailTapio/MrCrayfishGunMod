@@ -50,9 +50,9 @@ public class ThrowableGrenadeRenderer extends EntityRenderer<ThrowableGrenadeEnt
 
         if(entity instanceof ThrowableStunGrenadeEntity)
         {
-            poseStack.translate(0, entity.getDimensions(Pose.STANDING).height / 2, 0);
+            poseStack.translate(0, entity.getDimensions(Pose.STANDING).height() / 2, 0);
             poseStack.mulPose(Axis.ZP.rotationDegrees(-90F));
-            poseStack.translate(0, -entity.getDimensions(Pose.STANDING).height / 2, 0);
+            poseStack.translate(0, -entity.getDimensions(Pose.STANDING).height() / 2, 0);
         }
 
         poseStack.translate(0.0, 0.5, 0.0);

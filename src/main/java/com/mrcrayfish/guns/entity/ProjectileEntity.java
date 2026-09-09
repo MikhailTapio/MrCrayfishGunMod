@@ -1,5 +1,9 @@
 package com.mrcrayfish.guns.entity;
 
+import com.mrcrayfish.guns.util.GunItemData;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.component.CustomModelData;
+
 import com.mrcrayfish.framework.api.network.LevelLocation;
 import com.mrcrayfish.guns.Config;
 import com.mrcrayfish.guns.common.BoundingBoxManager;
@@ -32,7 +36,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundExplodePacket;
@@ -56,10 +60,12 @@ import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.*;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.entity.IEntityAdditionalSpawnData;
-import net.minecraftforge.network.NetworkHooks;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
+import net.minecraft.server.level.ServerEntity;
+import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -70,7 +76,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public class ProjectileEntity extends Entity implements IEntityAdditionalSpawnData
+public class ProjectileEntity extends Entity implements IEntityWithComplexSpawn
 {
     private static final Predicate<Entity> PROJECTILE_TARGETS = input -> input != null && input.isPickable() && !input.isSpectator();
     private static final Predicate<BlockState> IGNORE_LEAVES = input -> input != null && Config.COMMON.gameplay.ignoreLeaves.get() && input.getBlock() instanceof LeavesBlock;
@@ -100,7 +106,7 @@ public class ProjectileEntity extends Entity implements IEntityAdditionalSpawnDa
         this.modifiedGun = modifiedGun;
         this.general = modifiedGun.getGeneral();
         this.projectile = modifiedGun.getProjectile();
-        this.entitySize = new EntityDimensions(this.projectile.getSize(), this.projectile.getSize(), false);
+        this.entitySize = EntityDimensions.scalable(this.projectile.getSize(), this.projectile.getSize());
         this.modifiedGravity = modifiedGun.getProjectile().isGravity() ? GunModifierHelper.getModifiedProjectileGravity(weapon, -0.04) : 0.0;
         this.life = GunModifierHelper.getModifiedProjectileLife(weapon, this.projectile.getLife());
 
@@ -117,32 +123,21 @@ public class ProjectileEntity extends Entity implements IEntityAdditionalSpawnDa
         double posZ = shooter.zOld + (shooter.getZ() - shooter.zOld) / 2.0;
         this.setPos(posX, posY, posZ);
 
-        Item ammo = ForgeRegistries.ITEMS.getValue(this.projectile.getItem());
+        Item ammo = BuiltInRegistries.ITEM.get(this.projectile.getItem());
         if(ammo != null)
         {
-            int customModelData = -1;
-            if(weapon.getTag() != null)
-            {
-                if(weapon.getTag().contains("Model", Tag.TAG_COMPOUND))
-                {
-                    ItemStack model = ItemStack.of(weapon.getTag().getCompound("Model"));
-                    if(model.getTag() != null && model.getTag().contains("CustomModelData"))
-                    {
-                        customModelData = model.getTag().getInt("CustomModelData");
-                    }
-                }
-            }
+            ItemStack model = GunItemData.getModel(weapon);
             ItemStack ammoStack = new ItemStack(ammo);
-            if(customModelData != -1)
+            if(model.has(DataComponents.CUSTOM_MODEL_DATA))
             {
-                ammoStack.getOrCreateTag().putInt("CustomModelData", customModelData);
+                ammoStack.set(DataComponents.CUSTOM_MODEL_DATA, model.get(DataComponents.CUSTOM_MODEL_DATA));
             }
             this.item = ammoStack;
         }
     }
 
     @Override
-    protected void defineSynchedData() {}
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {}
 
     @Override
     public EntityDimensions getDimensions(Pose pose)
@@ -223,7 +218,7 @@ public class ProjectileEntity extends Entity implements IEntityAdditionalSpawnDa
             }
 
             List<EntityResult> hitEntities = null;
-            int level = EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.COLLATERAL.get(), this.weapon);
+            int level = GunEnchantmentHelper.getLevel(ModEnchantments.COLLATERAL, this.weapon);
             if(level == 0)
             {
                 EntityResult entityResult = this.findEntityOnPath(startVec, endVec);
@@ -369,7 +364,7 @@ public class ProjectileEntity extends Entity implements IEntityAdditionalSpawnDa
         AABB boundingBox = entity.getBoundingBox();
         if(Config.COMMON.gameplay.improvedHitboxes.get() && entity instanceof ServerPlayer && this.shooter != null)
         {
-            int ping = (int) Math.floor((((ServerPlayer) this.shooter).latency / 1000.0) * 20.0 + 0.5);
+            int ping = (int) Math.floor((((ServerPlayer) this.shooter).connection.latency() / 1000.0) * 20.0 + 0.5);
             boundingBox = BoundingBoxManager.getBoundingBox((Player) entity, ping);
         }
         boundingBox = boundingBox.expandTowards(0, expandHeight, 0);
@@ -422,7 +417,7 @@ public class ProjectileEntity extends Entity implements IEntityAdditionalSpawnDa
 
     private void onHit(HitResult result, Vec3 startVec, Vec3 endVec)
     {
-        if(MinecraftForge.EVENT_BUS.post(new GunProjectileHitEvent(result, this)))
+        if(NeoForge.EVENT_BUS.post(new GunProjectileHitEvent(result, this)).isCanceled())
         {
             return;
         }
@@ -479,7 +474,7 @@ public class ProjectileEntity extends Entity implements IEntityAdditionalSpawnDa
                 bell.attemptToRing(this.level(), pos, blockHitResult.getDirection());
             }
 
-            int fireStarterLevel = EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.FIRE_STARTER.get(), this.weapon);
+            int fireStarterLevel = GunEnchantmentHelper.getLevel(ModEnchantments.FIRE_STARTER, this.weapon);
             if(fireStarterLevel > 0 && Config.COMMON.gameplay.griefing.setFireToBlocks.get())
             {
                 BlockPos offsetPos = pos.relative(blockHitResult.getDirection());
@@ -509,15 +504,15 @@ public class ProjectileEntity extends Entity implements IEntityAdditionalSpawnDa
                 }
             }
 
-            int fireStarterLevel = EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.FIRE_STARTER.get(), this.weapon);
+            int fireStarterLevel = GunEnchantmentHelper.getLevel(ModEnchantments.FIRE_STARTER, this.weapon);
             if(fireStarterLevel > 0)
             {
-                entity.setSecondsOnFire(2);
+                entity.igniteForSeconds(2);
             }
 
             this.onHitEntity(entity, result.getLocation(), startVec, endVec, entityHitResult.isHeadshot());
             level().gameEvent(GameEvent.PROJECTILE_LAND, position(), GameEvent.Context.of(entity));
-            int collateralLevel = EnchantmentHelper.getItemEnchantmentLevel(ModEnchantments.COLLATERAL.get(), weapon);
+            int collateralLevel = GunEnchantmentHelper.getLevel(ModEnchantments.COLLATERAL, weapon);
             if(collateralLevel == 0)
             {
                 this.remove(RemovalReason.KILLED);
@@ -577,7 +572,7 @@ public class ProjectileEntity extends Entity implements IEntityAdditionalSpawnDa
     }
 
     @Override
-    public void writeSpawnData(FriendlyByteBuf buffer)
+    public void writeSpawnData(RegistryFriendlyByteBuf buffer)
     {
         buffer.writeNbt(this.projectile.serializeNBT());
         buffer.writeNbt(this.general.serializeNBT());
@@ -588,7 +583,7 @@ public class ProjectileEntity extends Entity implements IEntityAdditionalSpawnDa
     }
 
     @Override
-    public void readSpawnData(FriendlyByteBuf buffer)
+    public void readSpawnData(RegistryFriendlyByteBuf buffer)
     {
         this.projectile = new Gun.Projectile();
         this.projectile.deserializeNBT(buffer.readNbt());
@@ -598,7 +593,7 @@ public class ProjectileEntity extends Entity implements IEntityAdditionalSpawnDa
         this.item = BufferUtil.readItemStackFromBufIgnoreTag(buffer);
         this.modifiedGravity = buffer.readDouble();
         this.life = buffer.readVarInt();
-        this.entitySize = new EntityDimensions(this.projectile.getSize(), this.projectile.getSize(), false);
+        this.entitySize = EntityDimensions.scalable(this.projectile.getSize(), this.projectile.getSize());
     }
 
     public void updateHeading()
@@ -671,8 +666,9 @@ public class ProjectileEntity extends Entity implements IEntityAdditionalSpawnDa
     }
 
     @Override
-    public void onRemovedFromWorld()
+    public void onRemovedFromLevel()
     {
+        super.onRemovedFromLevel();
         if(!this.level().isClientSide)
         {
             PacketHandler.getPlayChannel().sendToNearbyPlayers(this::getDeathTargetPoint, new S2CMessageRemoveProjectile(this.getId()));
@@ -681,13 +677,13 @@ public class ProjectileEntity extends Entity implements IEntityAdditionalSpawnDa
 
     private LevelLocation getDeathTargetPoint()
     {
-        return LevelLocation.create(this.level(), this.getX(), this.getY(), this.getZ(), 256);
+        return LevelLocation.create((ServerLevel) this.level(), this.getX(), this.getY(), this.getZ(), 256);
     }
 
     @Override
-    public Packet<ClientGamePacketListener> getAddEntityPacket()
+    public Packet<ClientGamePacketListener> getAddEntityPacket(ServerEntity entity)
     {
-        return NetworkHooks.getEntitySpawningPacket(this);
+        return new ClientboundAddEntityPacket(this, entity);
     }
 
     /**
@@ -813,7 +809,7 @@ public class ProjectileEntity extends Entity implements IEntityAdditionalSpawnDa
         Explosion.BlockInteraction mode = breakTerrain ? Explosion.BlockInteraction.DESTROY : Explosion.BlockInteraction.KEEP;
         Explosion explosion = new ProjectileExplosion(world, entity, source, null, entity.getX(), entity.getY(), entity.getZ(), radius, false, mode);
 
-        if(net.minecraftforge.event.ForgeEventFactory.onExplosionStart(world, explosion))
+        if(net.neoforged.neoforge.event.EventHooks.onExplosionStart(world, explosion))
             return;
 
         // Do explosion logic
@@ -839,7 +835,7 @@ public class ProjectileEntity extends Entity implements IEntityAdditionalSpawnDa
         {
             if(player.distanceToSqr(entity.getX(), entity.getY(), entity.getZ()) < 4096)
             {
-                player.connection.send(new ClientboundExplodePacket(entity.getX(), entity.getY(), entity.getZ(), radius, explosion.getToBlow(), explosion.getHitPlayers().get(player)));
+                player.connection.send(new ClientboundExplodePacket(entity.getX(), entity.getY(), entity.getZ(), radius, explosion.getToBlow(), explosion.getHitPlayers().get(player), mode, net.minecraft.core.particles.ParticleTypes.EXPLOSION, net.minecraft.core.particles.ParticleTypes.EXPLOSION_EMITTER, net.minecraft.sounds.SoundEvents.GENERIC_EXPLODE));
             }
         }
     }

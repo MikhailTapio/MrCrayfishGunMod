@@ -58,7 +58,7 @@ public class ItemInHandLayerMixin
             {
                 ci.cancel();
                 PlayerItemInHandLayer<?, ?> layer = (PlayerItemInHandLayer<?, ?>) (Object) this;
-                mrCrayfishGunMod$renderArmWithGun(layer, (Player) entity, stack, gunItem, display, hand, arm, poseStack, source, light, Minecraft.getInstance().getFrameTime());
+                mrCrayfishGunMod$renderArmWithGun(layer, (Player) entity, stack, gunItem, display, hand, arm, poseStack, source, light, Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true));
             }
         }
     }

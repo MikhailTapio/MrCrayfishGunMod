@@ -1,0 +1,22 @@
+{
+  "anvil_cost": 4,
+  "description": {
+    "translate": "enchantment.cgm.trigger_finger"
+  },
+  "effects": {},
+  "exclusive_set": "#cgm:exclusive_set/weapon",
+  "max_cost": {
+    "base": 55,
+    "per_level_above_first": 10
+  },
+  "max_level": 2,
+  "min_cost": {
+    "base": 15,
+    "per_level_above_first": 10
+  },
+  "slots": [
+    "mainhand"
+  ],
+  "supported_items": "#cgm:enchantable/semi_auto_gun",
+  "weight": 2
+}

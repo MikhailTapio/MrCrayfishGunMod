@@ -3,8 +3,8 @@ package com.mrcrayfish.guns.item;
 import com.mrcrayfish.guns.client.handler.GunRenderingHandler;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.fml.loading.FMLEnvironment;
 
 /**
  * Author: MrCrayfish

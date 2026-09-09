@@ -24,10 +24,10 @@ public class SophisticatedHelper {
                 final ItemStack stack = inv.getStackInSlot(i);
                 if(!Gun.isAmmo(stack, id)) continue;
                 int finalI = i;
-                ctx.set(new AmmoContext(stack, s -> inv.onContentsChanged(finalI)));
+                ctx.set(new AmmoContext(stack.copy(), s -> inv.setStackInSlot(finalI, s)));
                 return true;
             }
-            return true;
+            return false;
         });
         return ctx.get();
     }

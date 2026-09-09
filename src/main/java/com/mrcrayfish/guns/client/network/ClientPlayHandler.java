@@ -35,7 +35,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -189,7 +189,7 @@ public class ClientPlayHandler
         {
             if(Config.CLIENT.sounds.playSoundWhenCritical.get())
             {
-                SoundEvent event = ForgeRegistries.SOUND_EVENTS.getValue(new ResourceLocation(Config.CLIENT.sounds.criticalSound.get()));
+                SoundEvent event = BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse(Config.CLIENT.sounds.criticalSound.get()));
                 return event != null ? event : SoundEvents.PLAYER_ATTACK_CRIT;
             }
         }
@@ -197,7 +197,7 @@ public class ClientPlayHandler
         {
             if(Config.CLIENT.sounds.playSoundWhenHeadshot.get())
             {
-                SoundEvent event = ForgeRegistries.SOUND_EVENTS.getValue(new ResourceLocation(Config.CLIENT.sounds.headshotSound.get()));
+                SoundEvent event = BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse(Config.CLIENT.sounds.headshotSound.get()));
                 return event != null ? event : SoundEvents.PLAYER_ATTACK_KNOCKBACK;
             }
         }

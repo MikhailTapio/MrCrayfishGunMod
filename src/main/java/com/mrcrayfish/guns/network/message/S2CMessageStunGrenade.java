@@ -1,11 +1,10 @@
 package com.mrcrayfish.guns.network.message;
 
 import com.mrcrayfish.framework.api.network.MessageContext;
-import com.mrcrayfish.framework.api.network.message.PlayMessage;
 import com.mrcrayfish.guns.client.network.ClientPlayHandler;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 
-public class S2CMessageStunGrenade extends PlayMessage<S2CMessageStunGrenade>
+public class S2CMessageStunGrenade
 {
     private double x, y, z;
 
@@ -18,16 +17,14 @@ public class S2CMessageStunGrenade extends PlayMessage<S2CMessageStunGrenade>
         this.x = x;
     }
 
-    @Override
-    public void encode(S2CMessageStunGrenade message, FriendlyByteBuf buffer)
+    public static void encode(S2CMessageStunGrenade message, RegistryFriendlyByteBuf buffer)
     {
         buffer.writeDouble(message.x);
         buffer.writeDouble(message.y);
         buffer.writeDouble(message.z);
     }
 
-    @Override
-    public S2CMessageStunGrenade decode(FriendlyByteBuf buffer)
+    public static S2CMessageStunGrenade decode(RegistryFriendlyByteBuf buffer)
     {
         double x = buffer.readDouble();
         double y = buffer.readDouble();
@@ -35,8 +32,7 @@ public class S2CMessageStunGrenade extends PlayMessage<S2CMessageStunGrenade>
         return new S2CMessageStunGrenade(x, y, z);
     }
 
-    @Override
-    public void handle(S2CMessageStunGrenade message, MessageContext context)
+    public static void handle(S2CMessageStunGrenade message, MessageContext context)
     {
         context.execute(() -> ClientPlayHandler.handleExplosionStunGrenade(message));
         context.setHandled(true);

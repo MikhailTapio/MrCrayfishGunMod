@@ -21,7 +21,7 @@ import java.util.Map;
 
 @Mixin(LayeredCauldronBlock.class)
 public abstract class LayeredCauldronBlockMixin extends AbstractCauldronBlock {
-    public LayeredCauldronBlockMixin(Properties p, Map<Item, CauldronInteraction> m) {
+    public LayeredCauldronBlockMixin(Properties p, CauldronInteraction.InteractionMap m) {
         super(p, m);
     }
 

@@ -1,0 +1,17 @@
+{
+  "type": "cgm:workbench",
+  "materials": [
+    {
+      "count": 4,
+      "tag": "c:nuggets/iron"
+    },
+    {
+      "count": 1,
+      "item": "minecraft:sponge"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "cgm:silencer"
+  }
+}

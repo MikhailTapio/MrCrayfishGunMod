@@ -32,7 +32,7 @@ public class GrenadeLauncherModel implements IOverrideModel
         if(entity != null && entity.equals(Minecraft.getInstance().player))
         {
             ItemCooldowns tracker = Minecraft.getInstance().player.getCooldowns();
-            cooldown = tracker.getCooldownPercent(stack.getItem(), Minecraft.getInstance().getFrameTime());
+            cooldown = tracker.getCooldownPercent(stack.getItem(), Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true));
             cooldown = (float) easeInOutBack(cooldown);
         }
 

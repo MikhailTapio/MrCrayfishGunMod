@@ -1,0 +1,22 @@
+{
+  "anvil_cost": 4,
+  "description": {
+    "translate": "enchantment.cgm.quick_hands"
+  },
+  "effects": {},
+  "exclusive_set": "#cgm:exclusive_set/ammo",
+  "max_cost": {
+    "base": 61,
+    "per_level_above_first": 10
+  },
+  "max_level": 2,
+  "min_cost": {
+    "base": 1,
+    "per_level_above_first": 10
+  },
+  "slots": [
+    "mainhand"
+  ],
+  "supported_items": "#cgm:enchantable/gun",
+  "weight": 2
+}

@@ -1,153 +1,122 @@
 plugins {
-    id 'eclipse'
+    id 'java-library'
     id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '5.1.+'
-    id 'org.spongepowered.mixin' version '0.7.+'
-    id 'org.parchmentmc.librarian.forgegradle' version '1.+'
+    id 'net.neoforged.moddev' version '2.0.146'
+    id 'idea'
 }
 
-archivesBaseName = archive_base_name
-version = "${mod_version}+Forge+${minecraft_version}"
-group = "com.mrcrayfish.cgm.forge"
-
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
-
-sourceSets.main.resources { srcDir 'src/generated/resources' }
-
-mixin {
-    add sourceSets.main, "${mod_id}.refmap.json"
-    config "${mod_id}.mixins.json"
-}
-
-minecraft {
-    mappings channel: mappings_channel, version: mappings_version
-
-    runs {
-        client {
-            workingDirectory project.file('run')
-            property 'mixin.env.disableRefMap', 'true'
-            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
-            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-            property 'forge.logging.console.level', 'debug'
-            mods {
-                cgm {
-                    source sourceSets.main
-                }
-            }
-        }
-
-        server {
-            workingDirectory project.file('run')
-            property 'mixin.env.disableRefMap', 'true'
-            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
-            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-            property 'forge.logging.console.level', 'debug'
-            arg "-mixin.config=${mod_id}.mixins.json"
-            mods {
-                cgm {
-                    source sourceSets.main
-                }
-            }
-        }
-
-        data {
-            workingDirectory project.file('run')
-            property 'mixin.env.disableRefMap', 'true'
-            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
-            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-            property 'forge.logging.console.level', 'debug'
-            args '--mod', mod_id, '--all', '--output', file('src/generated/resources/')
-            arg '-mixin.config=${mod_id}.mixins.json'
-            mods {
-                cgm {
-                    source sourceSets.main
-                }
-            }
-        }
-    }
-}
+version = "${mod_version}+NeoForge+${minecraft_version}"
+group = 'com.mrcrayfish.guns'
+base { archivesName = archive_base_name }
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
 repositories {
-    mavenLocal()
     maven {
-        url = "https://maven.theillusivec4.top/"
+        name = 'CurseMaven'
+        url = 'https://www.cursemaven.com'
+        content { includeGroup 'curse.maven' }
     }
+    maven { url = 'https://maven.blamejared.com' }
     maven {
-        url "https://www.cursemaven.com"
-    }
-    maven {
-        name = "ModMaven"
-        url = "https://modmaven.dev"
+        url = 'https://api.modrinth.com/maven'
+        content { includeGroup 'maven.modrinth' }
     }
 }
+
+// TODO: restore these optional integrations for NeoForge 1.21.1.
+// Original source is retained; none of the core gameplay/rendering packages are excluded.
+sourceSets.main.java {
+    exclude 'com/mrcrayfish/guns/compat/SimplePlanesHelper.java'
+    exclude 'com/mrcrayfish/guns/compat/CMDCamHelper.java'
+    exclude 'com/mrcrayfish/guns/client/GunButtonBindings.java'
+    exclude 'com/mrcrayfish/guns/client/GunConflictContext.java'
+    exclude 'com/mrcrayfish/guns/client/handler/ControllerHandler.java'
+    exclude 'com/mrcrayfish/guns/mixin/common/simpleplanes/ShooterUpgradeMixin.java'
+}
+
+sourceSets.main.resources {
+    srcDir 'src/generated/resources'
+    exclude '**/.cache/**'
+}
+
+neoForge {
+    version = neo_version
+    runs {
+        client {
+            client()
+            gameDirectory = file('run/client')
+        }
+        server {
+            server()
+            gameDirectory = file('run/server')
+            programArgument '--nogui'
+        }
+        data {
+            data()
+            gameDirectory = file('run/data')
+            programArguments.addAll '--mod', mod_id, '--all',
+                    '--output', file('src/generated/resources').absolutePath,
+                    '--existing', file('src/main/resources').absolutePath
+        }
+        configureEach {
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            logLevel = org.slf4j.event.Level.INFO
+        }
+    }
+    mods {
+        cgm { sourceSet sourceSets.main }
+    }
+}
+
+configurations { runtimeClasspath.extendsFrom localRuntime }
 
 dependencies {
-    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-
-    runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:${project.curios_version}")
-    compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${project.curios_version}:api")
-
-    implementation fg.deobf("curse.maven:framework-549225:${framework_file_id}")
-    implementation fg.deobf("curse.maven:configured-457570:${configured_file_id}")
-    implementation fg.deobf("curse.maven:catalogue-459701:${catalogue_file_id}")
-    implementation fg.deobf("curse.maven:backpacked-352835:${backpacked_file_id}")
-    compileOnly fg.deobf("curse.maven:simple-planes-388908:${simple_planes_file_id}")
-    implementation fg.deobf("curse.maven:recruits-523860:${recruits_file_id}")
-    implementation fg.deobf("curse.maven:sophisticated-core-618298:${sop_core_file_id}")
-    implementation fg.deobf("curse.maven:sophisticated-backpacks-422301:${sop_backpacks_file_id}")
-    implementation fg.deobf("curse.maven:travelers-backpack-321117:${travelers_backpack_file_id}")
-    implementation fg.deobf("curse.maven:l2library-620203:${l2_lib_file_id}")
-    implementation fg.deobf("curse.maven:l2-backpack-620229:${l2_backpack_file_id}")
-    compileOnly fg.deobf("curse.maven:controllable-317269:${controllable_file_id}")
-    compileOnly fg.deobf("mezz.jei:jei-1.20.1-common-api:${jei_version}")
-    compileOnly fg.deobf("mezz.jei:jei-1.20.1-forge-api:${jei_version}")
-    runtimeOnly fg.deobf("mezz.jei:jei-1.20.1-forge:${jei_version}")
-    annotationProcessor('org.spongepowered:mixin:0.8.5:processor')
-
-    // For compatibility test
-    compileOnly fg.deobf("curse.maven:creativecore-257814:${creativecore_file_id}")
-    compileOnly fg.deobf("curse.maven:cmdcam-251244:${cmdcam_file_id}")
+    implementation "curse.maven:framework-549225:${framework_file_id}"
+    compileOnly "mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}"
+    localRuntime "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
+    localRuntime "curse.maven:configured-457570:${configured_file_id}"
+    compileOnly "maven.modrinth:curios:${curios_version_id}"
+    compileOnly "maven.modrinth:sophisticated-backpacks:${sophisticated_backpacks_version_id}"
+    compileOnly "maven.modrinth:sophisticated-core:${sophisticated_core_version_id}"
+    compileOnly "maven.modrinth:travelersbackpack:${travelers_backpack_version_id}"
+    compileOnly "maven.modrinth:l2backpack:${l2_backpack_version_id}"
+    compileOnly "maven.modrinth:l2library:${l2_library_version_id}"
+    compileOnly "curse.maven:backpacked-352835:${backpacked_file_id}"
 }
 
-jar {
-    manifest {
-        attributes([
-            "Specification-Title": "Gun Mod",
-            "Specification-Vendor": "MrCrayfish",
-            "Specification-Version": "1",
-            "Implementation-Title": "Gun Mod",
-            "Implementation-Version": "${mod_version}",
-            "Implementation-Vendor" : "MrCrayfish",
-            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-            "MixinConfigs": "${mod_id}.mixins.json"
-        ])
-    }
+def generateModMetadata = tasks.register('generateModMetadata', ProcessResources) {
+    def properties = [mod_version: project.version, neo_version: neo_version]
+    inputs.properties properties
+    expand properties
+    from 'src/main/templates'
+    into 'build/generated/sources/modMetadata'
 }
-
-jar.finalizedBy('reobfJar')
+sourceSets.main.resources.srcDir generateModMetadata
+neoForge.ideSyncTask generateModMetadata
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+    options.compilerArgs.addAll(['-Xmaxerrs', '200'])
+}
+
+tasks.named('wrapper', Wrapper) {
+    gradleVersion = '9.2.1'
+    distributionType = Wrapper.DistributionType.BIN
+}
+
+jar {
+    manifest.attributes('Specification-Title': 'Gun Mod',
+            'Specification-Vendor': 'MrCrayfish',
+            'Implementation-Title': 'CGM-Unofficial',
+            'Implementation-Version': project.version,
+            'Implementation-Vendor': 'MrCrayfish')
 }
 
 publishing {
     publications {
         mavenJava(MavenPublication) {
             artifactId = "${mod_id}-${minecraft_version}"
-            version = mod_version
             from components.java
-        }
-    }
-
-    // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
-    repositories {
-        maven {
-            name = "release"
-            url = 'https://maven.nova-committee.cn/releases'
-            credentials {
-                username = System.getenv("MAVEN_USERNAME")
-                password = System.getenv("MAVEN_PASSWORD")
-            }
         }
     }
 }

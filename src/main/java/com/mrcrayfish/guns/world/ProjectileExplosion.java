@@ -8,7 +8,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.enchantment.ProtectionEnchantment;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.ExplosionDamageCalculator;
 import net.minecraft.world.level.Level;
@@ -30,6 +30,7 @@ public class ProjectileExplosion extends Explosion
     private static final ExplosionDamageCalculator DEFAULT_CONTEXT = new ExplosionDamageCalculator();
 
     private final Level world;
+    private final DamageSource projectileDamageSource;
     private final double x;
     private final double y;
     private final double z;
@@ -39,8 +40,9 @@ public class ProjectileExplosion extends Explosion
 
     public ProjectileExplosion(Level world, Entity exploder, @Nullable DamageSource source, @Nullable ExplosionDamageCalculator context, double x, double y, double z, float size, boolean causesFire, BlockInteraction mode)
     {
-        super(world, exploder, source, context, x, y, z, size, causesFire, mode);
+        super(world, exploder, source, context, x, y, z, size, causesFire, mode, net.minecraft.core.particles.ParticleTypes.EXPLOSION, net.minecraft.core.particles.ParticleTypes.EXPLOSION_EMITTER, net.minecraft.sounds.SoundEvents.GENERIC_EXPLODE);
         this.world = world;
+        this.projectileDamageSource = source != null ? source : world.damageSources().explosion(this);
         this.x = x;
         this.y = y;
         this.z = z;
@@ -110,12 +112,12 @@ public class ProjectileExplosion extends Explosion
 
         List<Entity> entities = this.world.getEntities(this.exploder, new AABB((double) minX, (double) minY, (double) minZ, (double) maxX, (double) maxY, (double) maxZ));
 
-        net.minecraftforge.event.ForgeEventFactory.onExplosionDetonate(this.world, this, entities, radius);
+        net.neoforged.neoforge.event.EventHooks.onExplosionDetonate(this.world, this, entities, radius);
 
         Vec3 explosionPos = new Vec3(this.x, this.y, this.z);
         for(Entity entity : entities)
         {
-            if(entity.ignoreExplosion())
+            if(entity.ignoreExplosion(this))
                 continue;
 
             double strength = Math.sqrt(entity.distanceToSqr(explosionPos)) / radius;
@@ -143,12 +145,12 @@ public class ProjectileExplosion extends Explosion
 
             double blockDensity = (double) getSeenPercent(explosionPos, entity);
             double damage = (1.0D - strength) * blockDensity;
-            entity.hurt(this.getDamageSource(), (float) ((int) ((damage * damage + damage) / 2.0D * 7.0D * (double) radius + 1.0D)));
+            entity.hurt(this.projectileDamageSource, (float) ((int) ((damage * damage + damage) / 2.0D * 7.0D * (double) radius + 1.0D)));
 
             double blastDamage = damage;
             if(entity instanceof LivingEntity)
             {
-                blastDamage = ProtectionEnchantment.getExplosionKnockbackAfterDampener((LivingEntity) entity, damage);
+                blastDamage = damage * (1.0 - ((LivingEntity) entity).getAttributeValue(Attributes.EXPLOSION_KNOCKBACK_RESISTANCE));
             }
             entity.setDeltaMovement(entity.getDeltaMovement().add(deltaX * blastDamage, deltaY * blastDamage, deltaZ * blastDamage));
 

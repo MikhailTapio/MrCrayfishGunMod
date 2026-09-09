@@ -51,22 +51,7 @@ public class InventoryUtil
 
     private static boolean areItemStacksEqualIgnoreCount(ItemStack source, ItemStack target)
     {
-        if(source.getItem() != target.getItem())
-        {
-            return false;
-        }
-        else if(source.getDamageValue() != target.getDamageValue())
-        {
-            return false;
-        }
-        else if(source.getTag() == null && target.getTag() != null)
-        {
-            return false;
-        }
-        else
-        {
-            return (source.getTag() == null || source.getTag().equals(target.getTag())) && source.areCapsCompatible(target);
-        }
+        return ItemStack.isSameItemSameComponents(source, target);
     }
 
     public static boolean hasWorkstationIngredient(Player player, WorkbenchIngredient find)

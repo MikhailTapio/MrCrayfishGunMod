@@ -1,0 +1,14 @@
+{
+  "replace": false,
+  "values": [
+    "cgm:quick_hands",
+    "cgm:reclaimed",
+    "cgm:lightweight",
+    "cgm:over_capacity",
+    "cgm:trigger_finger",
+    "cgm:collateral",
+    "cgm:accelerator",
+    "cgm:puncturing",
+    "cgm:fire_starter"
+  ]
+}

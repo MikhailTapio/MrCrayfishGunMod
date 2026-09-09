@@ -5,11 +5,11 @@ import com.mrcrayfish.framework.client.resources.IDataLoader;
 import com.mrcrayfish.framework.client.resources.IResourceSupplier;
 import com.mrcrayfish.guns.item.IMeta;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenCustomHashMap;
+import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import net.minecraft.Util;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
@@ -31,7 +31,7 @@ public final class MetaLoader implements IDataLoader<MetaLoader.ItemResource>
         return instance;
     }
 
-    private final Object2ObjectMap<Item, DataObject> itemToData = Util.make(new Object2ObjectOpenCustomHashMap<>(Util.identityStrategy()), map -> map.defaultReturnValue(DataObject.EMPTY));
+    private final it.unimi.dsi.fastutil.objects.Reference2ObjectMap<Item, DataObject> itemToData = Util.make(new Reference2ObjectOpenHashMap<>(), map -> map.defaultReturnValue(DataObject.EMPTY));
 
     private MetaLoader() {}
 
@@ -44,10 +44,10 @@ public final class MetaLoader implements IDataLoader<MetaLoader.ItemResource>
     public List<ItemResource> getResourceSuppliers()
     {
         List<ItemResource> resources = new ArrayList<>();
-        ForgeRegistries.ITEMS.getValues().stream().filter(item -> item instanceof IMeta).forEach(item ->
+        BuiltInRegistries.ITEM.stream().filter(item -> item instanceof IMeta).forEach(item ->
         {
             ResourceLocation key = item.builtInRegistryHolder().key().location();
-            ResourceLocation location = new ResourceLocation(key.getNamespace(), "models/item/" + key.getPath() + ".cgmmeta");
+            ResourceLocation location = ResourceLocation.fromNamespaceAndPath(key.getNamespace(), "models/item/" + key.getPath() + ".cgmmeta");
             resources.add(new ItemResource(item, location));
         });
         return resources;

@@ -1,16 +1,17 @@
 package com.mrcrayfish.guns.item;
 
+import com.mrcrayfish.guns.util.GunItemData;
+
 import com.mrcrayfish.guns.GunMod;
-import com.mrcrayfish.guns.client.GunItemStackRenderer;
 import com.mrcrayfish.guns.client.KeyBinds;
 import com.mrcrayfish.guns.common.Gun;
 import com.mrcrayfish.guns.common.NetworkGunManager;
 import com.mrcrayfish.guns.debug.Debug;
-import com.mrcrayfish.guns.enchantment.EnchantmentTypes;
+import com.mrcrayfish.guns.init.ModEnchantments;
+import net.minecraft.core.Holder;
 import com.mrcrayfish.guns.util.GunEnchantmentHelper;
 import com.mrcrayfish.guns.util.GunModifierHelper;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
@@ -20,15 +21,13 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.client.extensions.common.IClientItemExtensions;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.WeakHashMap;
-import java.util.function.Consumer;
 
 public class GunItem extends Item implements IColored, IMeta
 {
@@ -44,6 +43,7 @@ public class GunItem extends Item implements IColored, IMeta
     public void setGun(NetworkGunManager.Supplier supplier)
     {
         this.gun = supplier.getGun();
+        this.modifiedGunCache.clear();
     }
 
     public Gun getGun()
@@ -52,18 +52,18 @@ public class GunItem extends Item implements IColored, IMeta
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flag)
+    public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> tooltip, TooltipFlag flag)
     {
         Gun modifiedGun = this.getModifiedGun(stack);
 
-        Item ammo = ForgeRegistries.ITEMS.getValue(modifiedGun.getProjectile().getItem());
+        Item ammo = BuiltInRegistries.ITEM.get(modifiedGun.getProjectile().getItem());
         if(ammo != null)
         {
             tooltip.add(Component.translatable("info.cgm.ammo_type", Component.translatable(ammo.getDescriptionId()).withStyle(ChatFormatting.WHITE)).withStyle(ChatFormatting.GRAY));
         }
 
         String additionalDamageText = "";
-        CompoundTag tagCompound = stack.getTag();
+        CompoundTag tagCompound = GunItemData.getTag(stack);
         if(tagCompound != null)
         {
             if(tagCompound.contains("AdditionalDamage", Tag.TAG_ANY_NUMERIC))
@@ -73,11 +73,11 @@ public class GunItem extends Item implements IColored, IMeta
 
                 if(additionalDamage > 0)
                 {
-                    additionalDamageText = ChatFormatting.GREEN + " +" + ItemStack.ATTRIBUTE_MODIFIER_FORMAT.format(additionalDamage);
+                    additionalDamageText = ChatFormatting.GREEN + " +" + net.minecraft.world.item.component.ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format(additionalDamage);
                 }
                 else if(additionalDamage < 0)
                 {
-                    additionalDamageText = ChatFormatting.RED + " " + ItemStack.ATTRIBUTE_MODIFIER_FORMAT.format(additionalDamage);
+                    additionalDamageText = ChatFormatting.RED + " " + net.minecraft.world.item.component.ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format(additionalDamage);
                 }
             }
         }
@@ -85,7 +85,7 @@ public class GunItem extends Item implements IColored, IMeta
         float damage = modifiedGun.getProjectile().getDamage();
         damage = GunModifierHelper.getModifiedProjectileDamage(stack, damage);
         damage = GunEnchantmentHelper.getAcceleratorDamage(stack, damage);
-        tooltip.add(Component.translatable("info.cgm.damage", ChatFormatting.WHITE + ItemStack.ATTRIBUTE_MODIFIER_FORMAT.format(damage) + additionalDamageText).withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("info.cgm.damage", ChatFormatting.WHITE + net.minecraft.world.item.component.ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format(damage) + additionalDamageText).withStyle(ChatFormatting.GRAY));
 
         if(tagCompound != null)
         {
@@ -118,7 +118,7 @@ public class GunItem extends Item implements IColored, IMeta
     @Override
     public boolean isBarVisible(ItemStack stack)
     {
-        CompoundTag tagCompound = stack.getOrCreateTag();
+        CompoundTag tagCompound = GunItemData.getOrCreateTag(stack);
         Gun modifiedGun = this.getModifiedGun(stack);
         return !tagCompound.getBoolean("IgnoreAmmo") && tagCompound.getInt("AmmoCount") != GunEnchantmentHelper.getAmmoCapacity(stack, modifiedGun);
     }
@@ -126,7 +126,7 @@ public class GunItem extends Item implements IColored, IMeta
     @Override
     public int getBarWidth(ItemStack stack)
     {
-        CompoundTag tagCompound = stack.getOrCreateTag();
+        CompoundTag tagCompound = GunItemData.getOrCreateTag(stack);
         Gun modifiedGun = this.getModifiedGun(stack);
         return (int) (13.0 * (tagCompound.getInt("AmmoCount") / (double) GunEnchantmentHelper.getAmmoCapacity(stack, modifiedGun)));
     }
@@ -139,7 +139,7 @@ public class GunItem extends Item implements IColored, IMeta
 
     public Gun getModifiedGun(ItemStack stack)
     {
-        CompoundTag tagCompound = stack.getTag();
+        CompoundTag tagCompound = GunItemData.getTag(stack);
         if(tagCompound != null && tagCompound.contains("Gun", Tag.TAG_COMPOUND))
         {
             return this.modifiedGunCache.computeIfAbsent(tagCompound, item ->
@@ -164,14 +164,14 @@ public class GunItem extends Item implements IColored, IMeta
     }
 
     @Override
-    public boolean canApplyAtEnchantingTable(ItemStack stack, Enchantment enchantment)
+    public boolean isPrimaryItemFor(ItemStack stack, Holder<Enchantment> enchantment)
     {
-        if(enchantment.category == EnchantmentTypes.SEMI_AUTO_GUN)
+        if(enchantment.is(ModEnchantments.TRIGGER_FINGER))
         {
             Gun modifiedGun = this.getModifiedGun(stack);
             return !modifiedGun.getGeneral().isAuto();
         }
-        return super.canApplyAtEnchantingTable(stack, enchantment);
+        return super.isPrimaryItemFor(stack, enchantment);
     }
 
     @Override
@@ -186,16 +186,4 @@ public class GunItem extends Item implements IColored, IMeta
         return 5;
     }
 
-    @Override
-    public void initializeClient(Consumer<IClientItemExtensions> consumer)
-    {
-        consumer.accept(new IClientItemExtensions()
-        {
-            @Override
-            public BlockEntityWithoutLevelRenderer getCustomRenderer()
-            {
-                return new GunItemStackRenderer();
-            }
-        });
-    }
 }

@@ -33,7 +33,7 @@ public class BackpackHelper
             if(backpack.isEmpty())
                 continue;
 
-            if(needsAugment && !Augments.cached(backpack).has(ModAugmentTypes.QUIVERLINK.get()))
+            if(needsAugment && !Augments.get(backpack).has(ModAugmentTypes.QUIVERLINK.get()))
                 continue;
 
             for(int i = 0; i < inventory.getContainerSize(); i++)

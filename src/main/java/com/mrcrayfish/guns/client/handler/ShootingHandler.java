@@ -19,11 +19,11 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemCooldowns;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraftforge.client.event.InputEvent;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.EventPriority;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.neoforged.neoforge.client.event.InputEvent;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.bus.api.EventPriority;
+import net.neoforged.bus.api.SubscribeEvent;
 
 /**
  * Author: MrCrayfish
@@ -116,12 +116,9 @@ public class ShootingHandler
     }
 
     @SubscribeEvent
-    public void onHandleShooting(TickEvent.ClientTickEvent event)
+    public void onHandleShooting(ClientTickEvent.Pre event)
     {
-        if(event.phase != TickEvent.Phase.START)
-            return;
-
-        if(!this.isInGame())
+if(!this.isInGame())
             return;
 
         Minecraft mc = Minecraft.getInstance();
@@ -132,10 +129,7 @@ public class ShootingHandler
             if(heldItem.getItem() instanceof GunItem && (Gun.hasAmmo(heldItem) || player.isCreative()) && !PlayerReviveHelper.isBleeding(player))
             {
                 boolean shooting = KeyBinds.getShootMapping().isDown();
-                if(GunMod.controllableLoaded)
-                {
-                    shooting |= ControllerHandler.isShooting();
-                }
+                // TODO: restore Controllable integration for NeoForge 1.21.1.
                 if(shooting)
                 {
                     if(!this.shooting)
@@ -163,12 +157,9 @@ public class ShootingHandler
     }
 
     @SubscribeEvent
-    public void onPostClientTick(TickEvent.ClientTickEvent event)
+    public void onPostClientTick(ClientTickEvent.Post event)
     {
-        if(event.phase != TickEvent.Phase.END)
-            return;
-
-        if(!isInGame())
+if(!isInGame())
             return;
 
         Minecraft mc = Minecraft.getInstance();
@@ -213,7 +204,7 @@ public class ShootingHandler
             GunItem gunItem = (GunItem) heldItem.getItem();
             Gun modifiedGun = gunItem.getModifiedGun(heldItem);
 
-            if(MinecraftForge.EVENT_BUS.post(new GunFireEvent.Pre(player, heldItem)))
+            if(NeoForge.EVENT_BUS.post(new GunFireEvent.Pre(player, heldItem)).isCanceled())
                 return;
 
             int rate = GunEnchantmentHelper.getRate(heldItem, modifiedGun);
@@ -221,7 +212,7 @@ public class ShootingHandler
             tracker.addCooldown(heldItem.getItem(), rate);
             PacketHandler.getPlayChannel().sendToServer(new C2SMessageShoot(player));
 
-            MinecraftForge.EVENT_BUS.post(new GunFireEvent.Post(player, heldItem));
+            NeoForge.EVENT_BUS.post(new GunFireEvent.Post(player, heldItem));
         }
     }
 }

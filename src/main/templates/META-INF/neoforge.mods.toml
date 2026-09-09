@@ -1,0 +1,93 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="GPL3"
+
+[[mods]]
+modId="cgm"
+version="${mod_version}"
+displayName="MrCrayfish's Gun Mod"
+displayURL="https://mrcrayfish.com/"
+logoFile="cgm_banner.png"
+authors="MrCrayfish"
+description="MrCrayfish's Gun Mod adds in simple and straight forward weapons into Minecraft. They can be configured with many different attachments to add extra stats to your weapon and coloured to your personal liking. This mod adds ten weapons into the game!"
+
+[[dependencies.cgm]]
+    modId="neoforge"
+    type="required"
+    versionRange="[${neo_version},)"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.cgm]]
+    modId="minecraft"
+    type="required"
+    versionRange="[1.21.1]"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.cgm]]
+    modId="framework"
+    type="required"
+    versionRange="[0.13.11,)"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.cgm]]
+    modId="controllable"
+    type="optional"
+    versionRange="[0.16.3,)"
+    ordering="AFTER"
+    side="CLIENT"
+[[dependencies.cgm]]
+    modId="backpacked"
+    type="optional"
+    versionRange="[3.0.5,)"
+    ordering="AFTER"
+    side="BOTH"
+[[dependencies.cgm]]
+    modId="curios"
+    type="optional"
+    versionRange="[9.5.1,)"
+    ordering="AFTER"
+    side="BOTH"
+[[dependencies.cgm]]
+    modId="sophisticatedbackpacks"
+    type="optional"
+    versionRange="[3.26.2,)"
+    ordering="AFTER"
+    side="BOTH"
+[[dependencies.cgm]]
+    modId="sophisticatedcore"
+    type="optional"
+    versionRange="[1.5.1,)"
+    ordering="AFTER"
+    side="BOTH"
+[[dependencies.cgm]]
+    modId="travelersbackpack"
+    type="optional"
+    versionRange="[10.1.39,)"
+    ordering="AFTER"
+    side="BOTH"
+[[dependencies.cgm]]
+    modId="l2backpack"
+    type="optional"
+    versionRange="[3.1.5,)"
+    ordering="AFTER"
+    side="BOTH"
+[[dependencies.cgm]]
+    modId="l2library"
+    type="optional"
+    versionRange="[3.0.8,)"
+    ordering="AFTER"
+    side="BOTH"
+[[dependencies.cgm]]
+    modId="jei"
+    type="optional"
+    versionRange="[19.53.0.426,20)"
+    ordering="AFTER"
+    side="CLIENT"
+
+[[mixins]]
+    config="cgm.mixins.json"
+
+[modproperties.cgm]
+    catalogueImageIcon="cgm_icon.png"
+    catalogueBackground="cgm_background.png"
+    configuredBackground="minecraft:textures/block/stone_bricks.png"

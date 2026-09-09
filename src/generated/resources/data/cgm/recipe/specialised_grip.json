@@ -1,0 +1,17 @@
+{
+  "type": "cgm:workbench",
+  "materials": [
+    {
+      "count": 8,
+      "tag": "c:nuggets/iron"
+    },
+    {
+      "count": 1,
+      "item": "minecraft:gray_wool"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "cgm:specialised_grip"
+  }
+}

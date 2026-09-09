@@ -1,19 +1,16 @@
 package com.mrcrayfish.guns.network.message;
 
 import com.mrcrayfish.framework.api.network.MessageContext;
-import com.mrcrayfish.framework.api.network.message.PlayMessage;
 import com.mrcrayfish.guns.client.network.ClientPlayHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 
-import java.util.function.Supplier;
 
 /**
  * Author: MrCrayfish
  */
-public class S2CMessageProjectileHitBlock extends PlayMessage<S2CMessageProjectileHitBlock>
+public class S2CMessageProjectileHitBlock
 {
     private double x;
     private double y;
@@ -32,8 +29,7 @@ public class S2CMessageProjectileHitBlock extends PlayMessage<S2CMessageProjecti
         this.face = face;
     }
 
-    @Override
-    public void encode(S2CMessageProjectileHitBlock message, FriendlyByteBuf buffer)
+    public static void encode(S2CMessageProjectileHitBlock message, RegistryFriendlyByteBuf buffer)
     {
         buffer.writeDouble(message.x);
         buffer.writeDouble(message.y);
@@ -42,8 +38,7 @@ public class S2CMessageProjectileHitBlock extends PlayMessage<S2CMessageProjecti
         buffer.writeEnum(message.face);
     }
 
-    @Override
-    public S2CMessageProjectileHitBlock decode(FriendlyByteBuf buffer)
+    public static S2CMessageProjectileHitBlock decode(RegistryFriendlyByteBuf buffer)
     {
         double x = buffer.readDouble();
         double y = buffer.readDouble();
@@ -53,8 +48,7 @@ public class S2CMessageProjectileHitBlock extends PlayMessage<S2CMessageProjecti
         return new S2CMessageProjectileHitBlock(x, y, z, pos, face);
     }
 
-    @Override
-    public void handle(S2CMessageProjectileHitBlock message, MessageContext context)
+    public static void handle(S2CMessageProjectileHitBlock message, MessageContext context)
     {
         context.execute(() -> ClientPlayHandler.handleProjectileHitBlock(message));
         context.setHandled(true);

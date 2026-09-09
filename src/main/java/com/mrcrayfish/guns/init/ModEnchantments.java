@@ -1,35 +1,32 @@
 package com.mrcrayfish.guns.init;
 
 import com.mrcrayfish.guns.Reference;
-import com.mrcrayfish.guns.enchantment.AcceleratorEnchantment;
-import com.mrcrayfish.guns.enchantment.CollateralEnchantment;
-import com.mrcrayfish.guns.enchantment.FireStarterEnchantment;
-import com.mrcrayfish.guns.enchantment.LightweightEnchantment;
-import com.mrcrayfish.guns.enchantment.OverCapacityEnchantment;
-import com.mrcrayfish.guns.enchantment.PuncturingEnchantment;
-import com.mrcrayfish.guns.enchantment.QuickHandsEnchantment;
-import com.mrcrayfish.guns.enchantment.ReclaimedEnchantment;
-import com.mrcrayfish.guns.enchantment.TriggerFingerEnchantment;
+import com.mrcrayfish.guns.enchantment.*;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegistryObject;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-/**
- * Author: MrCrayfish
- */
+/** Author: MrCrayfish */
 public class ModEnchantments
 {
-    public static final DeferredRegister<Enchantment> REGISTER = DeferredRegister.create(ForgeRegistries.ENCHANTMENTS, Reference.MOD_ID);
+    public static final Map<ResourceKey<Enchantment>, GunEnchantment> DEFINITIONS = new LinkedHashMap<>();
+    public static final ResourceKey<Enchantment> QUICK_HANDS = register("quick_hands", new QuickHandsEnchantment());
+    public static final ResourceKey<Enchantment> TRIGGER_FINGER = register("trigger_finger", new TriggerFingerEnchantment());
+    public static final ResourceKey<Enchantment> LIGHTWEIGHT = register("lightweight", new LightweightEnchantment());
+    public static final ResourceKey<Enchantment> COLLATERAL = register("collateral", new CollateralEnchantment());
+    public static final ResourceKey<Enchantment> OVER_CAPACITY = register("over_capacity", new OverCapacityEnchantment());
+    public static final ResourceKey<Enchantment> RECLAIMED = register("reclaimed", new ReclaimedEnchantment());
+    public static final ResourceKey<Enchantment> ACCELERATOR = register("accelerator", new AcceleratorEnchantment());
+    public static final ResourceKey<Enchantment> PUNCTURING = register("puncturing", new PuncturingEnchantment());
+    public static final ResourceKey<Enchantment> FIRE_STARTER = register("fire_starter", new FireStarterEnchantment());
 
-    public static final RegistryObject<Enchantment> QUICK_HANDS = REGISTER.register("quick_hands", QuickHandsEnchantment::new);
-    public static final RegistryObject<Enchantment> TRIGGER_FINGER = REGISTER.register("trigger_finger", TriggerFingerEnchantment::new);
-    public static final RegistryObject<Enchantment> LIGHTWEIGHT = REGISTER.register("lightweight", LightweightEnchantment::new);
-    public static final RegistryObject<Enchantment> COLLATERAL = REGISTER.register("collateral", CollateralEnchantment::new);
-    public static final RegistryObject<Enchantment> OVER_CAPACITY = REGISTER.register("over_capacity", OverCapacityEnchantment::new);
-    public static final RegistryObject<Enchantment> RECLAIMED = REGISTER.register("reclaimed", ReclaimedEnchantment::new);
-    public static final RegistryObject<Enchantment> ACCELERATOR = REGISTER.register("accelerator", AcceleratorEnchantment::new);
-    public static final RegistryObject<Enchantment> PUNCTURING = REGISTER.register("puncturing", PuncturingEnchantment::new);
-    public static final RegistryObject<Enchantment> FIRE_STARTER = REGISTER.register("fire_starter", FireStarterEnchantment::new);
-    //Gravity Impulse (3 levels) - nearby entities will get knocked away from the target location
+    private static ResourceKey<Enchantment> register(String name, GunEnchantment definition)
+    {
+        ResourceKey<Enchantment> key = ResourceKey.create(Registries.ENCHANTMENT, ResourceLocation.fromNamespaceAndPath(Reference.MOD_ID, name));
+        DEFINITIONS.put(key, definition);
+        return key;
+    }
 }

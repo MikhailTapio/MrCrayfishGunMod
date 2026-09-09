@@ -22,7 +22,7 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class ModDamageTypes
 {
-    public static final ResourceKey<DamageType> BULLET = ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation(Reference.MOD_ID, "bullet"));
+    public static final ResourceKey<DamageType> BULLET = ResourceKey.create(Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath(Reference.MOD_ID, "bullet"));
 
     /**
      * Based on code in Botania by Vazkii
@@ -65,7 +65,7 @@ public class ModDamageTypes
                 } else {
                     final Component component = this.getEntity() == null ? this.getDirectEntity().getDisplayName() : this.getEntity().getDisplayName();
                     final ItemStack stack = this.getEntity() instanceof LivingEntity livingentity ? livingentity.getMainHandItem() : ItemStack.EMPTY;
-                    return !stack.isEmpty() && stack.hasCustomHoverName() ?
+                    return !stack.isEmpty() && stack.has(net.minecraft.core.component.DataComponents.CUSTOM_NAME) ?
                             Component.translatable(
                                     s + ".item",
                                     pLivingEntity.getDisplayName(),

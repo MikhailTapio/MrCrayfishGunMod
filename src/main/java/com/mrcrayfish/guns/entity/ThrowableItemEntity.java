@@ -4,7 +4,7 @@ import com.mrcrayfish.guns.Config;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.sounds.SoundEvent;
@@ -21,13 +21,15 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.entity.IEntityAdditionalSpawnData;
-import net.minecraftforge.network.NetworkHooks;
+import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
+import net.minecraft.server.level.ServerEntity;
+import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
+import net.minecraft.network.syncher.SynchedEntityData;
 
 /**
  * Author: MrCrayfish
  */
-public abstract class ThrowableItemEntity extends ThrowableProjectile implements IEntityAdditionalSpawnData
+public abstract class ThrowableItemEntity extends ThrowableProjectile implements IEntityWithComplexSpawn
 {
     private ItemStack item = ItemStack.EMPTY;
     private boolean shouldBounce;
@@ -72,7 +74,7 @@ public abstract class ThrowableItemEntity extends ThrowableProjectile implements
     }
 
     @Override
-    protected float getGravity()
+    protected double getDefaultGravity()
     {
         return this.gravityVelocity;
     }
@@ -188,24 +190,24 @@ public abstract class ThrowableItemEntity extends ThrowableProjectile implements
     }
 
     @Override
-    public void writeSpawnData(FriendlyByteBuf buffer)
+    public void writeSpawnData(RegistryFriendlyByteBuf buffer)
     {
         buffer.writeBoolean(this.shouldBounce);
         buffer.writeFloat(this.gravityVelocity);
-        buffer.writeItem(this.item);
+        ItemStack.OPTIONAL_STREAM_CODEC.encode(buffer, this.item);
     }
 
     @Override
-    public void readSpawnData(FriendlyByteBuf buffer)
+    public void readSpawnData(RegistryFriendlyByteBuf buffer)
     {
         this.shouldBounce = buffer.readBoolean();
         this.gravityVelocity = buffer.readFloat();
-        this.item = buffer.readItem();
+        this.item = ItemStack.OPTIONAL_STREAM_CODEC.decode(buffer);
     }
 
     @Override
-    public Packet<ClientGamePacketListener> getAddEntityPacket()
+    public Packet<ClientGamePacketListener> getAddEntityPacket(ServerEntity entity)
     {
-        return NetworkHooks.getEntitySpawningPacket(this);
+        return new ClientboundAddEntityPacket(this, entity);
     }
 }

@@ -14,7 +14,7 @@ public class ModTags
 
         private static TagKey<Block> tag(String name)
         {
-            return BlockTags.create(new ResourceLocation(Reference.MOD_ID, name));
+            return BlockTags.create(ResourceLocation.fromNamespaceAndPath(Reference.MOD_ID, name));
         }
     }
 }

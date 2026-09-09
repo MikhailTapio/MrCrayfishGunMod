@@ -2,8 +2,8 @@ package com.mrcrayfish.guns.event;
 
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.eventbus.api.Cancelable;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.bus.api.ICancellableEvent;
 
 /**
  * <p>Fired when a player reloads a gun.</p>
@@ -41,8 +41,7 @@ public class GunReloadEvent extends PlayerEvent
      *
      * @author Ocelot
      */
-    @Cancelable
-    public static class Pre extends GunReloadEvent
+    public static class Pre extends GunReloadEvent implements ICancellableEvent
     {
         public Pre(Player player, ItemStack stack)
         {

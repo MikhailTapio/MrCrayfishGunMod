@@ -3,7 +3,7 @@ package com.mrcrayfish.guns.client;
 import com.mrcrayfish.controllable.client.binding.IBindingContext;
 import com.mrcrayfish.guns.item.GunItem;
 import net.minecraft.client.Minecraft;
-import net.minecraftforge.client.settings.KeyConflictContext;
+import net.neoforged.neoforge.client.settings.KeyConflictContext;
 
 /**
  * Author: MrCrayfish

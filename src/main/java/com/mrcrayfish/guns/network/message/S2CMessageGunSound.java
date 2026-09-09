@@ -1,19 +1,16 @@
 package com.mrcrayfish.guns.network.message;
 
 import com.mrcrayfish.framework.api.network.MessageContext;
-import com.mrcrayfish.framework.api.network.message.PlayMessage;
 import com.mrcrayfish.guns.client.network.ClientPlayHandler;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
-import net.minecraftforge.network.NetworkEvent;
 
-import java.util.function.Supplier;
 
 /**
  * Author: MrCrayfish
  */
-public class S2CMessageGunSound extends PlayMessage<S2CMessageGunSound>
+public class S2CMessageGunSound
 {
     private ResourceLocation id;
     private SoundSource category;
@@ -42,8 +39,7 @@ public class S2CMessageGunSound extends PlayMessage<S2CMessageGunSound>
         this.reload = reload;
     }
 
-    @Override
-    public void encode(S2CMessageGunSound message, FriendlyByteBuf buffer)
+    public static void encode(S2CMessageGunSound message, RegistryFriendlyByteBuf buffer)
     {
         buffer.writeResourceLocation(message.id);
         buffer.writeEnum(message.category);
@@ -57,8 +53,7 @@ public class S2CMessageGunSound extends PlayMessage<S2CMessageGunSound>
         buffer.writeBoolean(message.reload);
     }
 
-    @Override
-    public S2CMessageGunSound decode(FriendlyByteBuf buffer)
+    public static S2CMessageGunSound decode(RegistryFriendlyByteBuf buffer)
     {
         ResourceLocation id = buffer.readResourceLocation();
         SoundSource category = buffer.readEnum(SoundSource.class);
@@ -73,8 +68,7 @@ public class S2CMessageGunSound extends PlayMessage<S2CMessageGunSound>
         return new S2CMessageGunSound(id, category, x, y, z, volume, pitch, shooterId, muzzle, reload);
     }
 
-    @Override
-    public void handle(S2CMessageGunSound message, MessageContext context)
+    public static void handle(S2CMessageGunSound message, MessageContext context)
     {
         context.execute(() -> ClientPlayHandler.handleMessageGunSound(message));
         context.setHandled(true);

@@ -1,7 +1,6 @@
 package com.mrcrayfish.guns.network.message;
 
 import com.mrcrayfish.framework.api.network.MessageContext;
-import com.mrcrayfish.framework.api.network.message.PlayMessage;
 import com.mrcrayfish.guns.client.network.ClientPlayHandler;
 import com.mrcrayfish.guns.common.Gun;
 import com.mrcrayfish.guns.entity.ProjectileEntity;
@@ -10,17 +9,15 @@ import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.network.NetworkEvent;
 
-import java.util.function.Supplier;
 
 /**
  * Author: MrCrayfish
  */
-public class S2CMessageBulletTrail extends PlayMessage<S2CMessageBulletTrail>
+public class S2CMessageBulletTrail
 {
     private int[] entityIds;
     private Vec3[] positions;
@@ -73,8 +70,7 @@ public class S2CMessageBulletTrail extends PlayMessage<S2CMessageBulletTrail>
         this.particleData = particleData;
     }
 
-    @Override
-    public void encode(S2CMessageBulletTrail message, FriendlyByteBuf buffer)
+    public static void encode(S2CMessageBulletTrail message, RegistryFriendlyByteBuf buffer)
     {
         buffer.writeInt(message.entityIds.length);
         for(int i = 0; i < message.entityIds.length; i++)
@@ -83,21 +79,20 @@ public class S2CMessageBulletTrail extends PlayMessage<S2CMessageBulletTrail>
             BufferUtil.writeVec3(buffer, message.positions[i]);
             BufferUtil.writeVec3(buffer, message.motions[i]);
         }
-        buffer.writeItem(message.item);
+        ItemStack.OPTIONAL_STREAM_CODEC.encode(buffer, message.item);
         buffer.writeVarInt(message.trailColor);
         buffer.writeDouble(message.trailLengthMultiplier);
         buffer.writeInt(message.life);
         buffer.writeDouble(message.gravity);
         buffer.writeInt(message.shooterId);
         buffer.writeBoolean(message.enchanted);
-        buffer.writeId(BuiltInRegistries.PARTICLE_TYPE, message.particleData.getType());
-        message.particleData.writeToNetwork(buffer);
+        ParticleTypes.STREAM_CODEC.encode(buffer, message.particleData);
     }
 
-    @Override
-    public S2CMessageBulletTrail decode(FriendlyByteBuf buffer)
+    public static S2CMessageBulletTrail decode(RegistryFriendlyByteBuf buffer)
     {
         int size = buffer.readInt();
+        if (size < 1 || size > 1024) throw new IllegalArgumentException("Invalid projectile count: " + size);
         int[] entityIds = new int[size];
         Vec3[] positions = new Vec3[size];
         Vec3[] motions = new Vec3[size];
@@ -107,30 +102,23 @@ public class S2CMessageBulletTrail extends PlayMessage<S2CMessageBulletTrail>
             positions[i] = BufferUtil.readVec3(buffer);
             motions[i] = BufferUtil.readVec3(buffer);
         }
-        ItemStack item = buffer.readItem();
+        ItemStack item = ItemStack.OPTIONAL_STREAM_CODEC.decode(buffer);
         int trailColor = buffer.readVarInt();
         double trailLengthMultiplier = buffer.readDouble();
         int life = buffer.readInt();
         double gravity = buffer.readDouble();
         int shooterId = buffer.readInt();
         boolean enchanted = buffer.readBoolean();
-        ParticleType<?> type = buffer.readById(BuiltInRegistries.PARTICLE_TYPE);
-        if (type == null) type = ParticleTypes.CRIT;
-        ParticleOptions particleData = this.readParticle(buffer, type);
+        ParticleOptions particleData = ParticleTypes.STREAM_CODEC.decode(buffer);
         return new S2CMessageBulletTrail(entityIds, positions, motions, item, trailColor, trailLengthMultiplier, life, gravity,shooterId, enchanted, particleData);
     }
 
-    @Override
-    public void handle(S2CMessageBulletTrail message, MessageContext context)
+    public static void handle(S2CMessageBulletTrail message, MessageContext context)
     {
         context.execute(() -> ClientPlayHandler.handleMessageBulletTrail(message));
         context.setHandled(true);
     }
 
-    private <T extends ParticleOptions> T readParticle(FriendlyByteBuf buffer, ParticleType<T> type)
-    {
-        return type.getDeserializer().fromNetwork(type, buffer);
-    }
 
     public int getCount()
     {

@@ -4,6 +4,7 @@ import com.mrcrayfish.guns.blockentity.inventory.IStorageBlock;
 import com.mrcrayfish.guns.common.container.WorkbenchContainer;
 import com.mrcrayfish.guns.init.ModTileEntities;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -36,16 +37,17 @@ public class WorkbenchBlockEntity extends SyncedBlockEntity implements IStorageB
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag)
+    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider provider)
     {
-        ContainerHelper.saveAllItems(tag, this.inventory);
+        super.saveAdditional(tag, provider);
+        ContainerHelper.saveAllItems(tag, this.inventory, provider);
     }
 
     @Override
-    public void load(CompoundTag tag)
+    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider provider)
     {
-        super.load(tag);
-        ContainerHelper.loadAllItems(tag, this.inventory);
+        super.loadAdditional(tag, provider);
+        ContainerHelper.loadAllItems(tag, this.inventory, provider);
     }
 
     @Override

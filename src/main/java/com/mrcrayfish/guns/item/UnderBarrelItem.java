@@ -43,8 +43,8 @@ public class UnderBarrelItem extends AttachmentItem implements IUnderBarrel, ICo
     }
 
     @Override
-    public boolean canApplyAtEnchantingTable(ItemStack stack, Enchantment enchantment)
+    public boolean isPrimaryItemFor(ItemStack stack, net.minecraft.core.Holder<Enchantment> enchantment)
     {
-        return enchantment == Enchantments.BINDING_CURSE || super.canApplyAtEnchantingTable(stack, enchantment);
+        return enchantment.is(Enchantments.BINDING_CURSE) || super.isPrimaryItemFor(stack, enchantment);
     }
 }

@@ -6,11 +6,11 @@ import com.mrcrayfish.guns.item.attachment.IAttachment;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.event.entity.player.ItemTooltipEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +20,7 @@ import java.util.List;
  *
  * Author: MrCrayfish
  */
-@Mod.EventBusSubscriber(modid = Reference.MOD_ID, value = Dist.CLIENT)
+@EventBusSubscriber(modid = Reference.MOD_ID, value = Dist.CLIENT)
 public abstract class Attachment
 {
     protected IGunModifier[] modifiers;
@@ -120,11 +120,11 @@ public abstract class Attachment
             }
             if(additionalDamage > 0.0F)
             {
-                addPerk(positivePerks, true, "perk.cgm.additional_damage.positive", ItemStack.ATTRIBUTE_MODIFIER_FORMAT.format(additionalDamage / 2.0));
+                addPerk(positivePerks, true, "perk.cgm.additional_damage.positive", net.minecraft.world.item.component.ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format(additionalDamage / 2.0));
             }
             else if(additionalDamage < 0.0F)
             {
-                addPerk(negativePerks, false, "perk.cgm.additional_damage.negative", ItemStack.ATTRIBUTE_MODIFIER_FORMAT.format(additionalDamage / 2.0));
+                addPerk(negativePerks, false, "perk.cgm.additional_damage.negative", net.minecraft.world.item.component.ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format(additionalDamage / 2.0));
             }
 
             /* Test for modified damage */

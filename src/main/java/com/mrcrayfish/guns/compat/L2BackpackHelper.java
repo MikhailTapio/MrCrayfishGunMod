@@ -6,7 +6,7 @@ import com.mrcrayfish.guns.common.AmmoContext;
 import com.mrcrayfish.guns.common.Gun;
 import dev.xkmc.l2backpack.content.common.BaseBagItem;
 import dev.xkmc.l2backpack.content.remote.player.EnderBackpackItem;
-import dev.xkmc.l2backpack.content.remote.worldchest.WorldChestItem;
+import dev.xkmc.l2backpack.content.remote.dimensional.DimensionalItem;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
@@ -24,7 +24,7 @@ public class L2BackpackHelper {
     private static final Map<Predicate<ItemStack>, SearchResult> search = ImmutableMap.of(
             s -> s.getItem() instanceof BaseBagItem, (p, s, i) -> handleBaseBagItem(s, i),
             s -> s.getItem() instanceof EnderBackpackItem, (p, s, i) -> handleEnderBackpackItem(p, i),
-            s -> s.getItem() instanceof WorldChestItem, L2BackpackHelper::handleWorldChest
+            s -> s.getItem() instanceof DimensionalItem, L2BackpackHelper::handleWorldChest
     );
 
     public static AmmoContext findAmmo(Player player, ResourceLocation id)
@@ -75,11 +75,11 @@ public class L2BackpackHelper {
     }
 
     private static AmmoContext handleWorldChest(Player player, ItemStack chestStack, ResourceLocation id) {
-        if (!((chestStack.getItem()) instanceof WorldChestItem w)) return AmmoContext.NONE;
+        if (!((chestStack.getItem()) instanceof DimensionalItem w)) return AmmoContext.NONE;
         if (!(player.level() instanceof ServerLevel l)) return AmmoContext.NONE;
         final AtomicReference<AmmoContext> atomic = new AtomicReference<>(AmmoContext.NONE);
         w.getContainer(chestStack, l).ifPresent(c -> {
-            final Container container = c.container;
+            final Container container = c.get();
             for (int i = 0; i < container.getContainerSize(); i++) {
                 ItemStack stack = container.getItem(i);
                 if(Gun.isAmmo(stack, id))
