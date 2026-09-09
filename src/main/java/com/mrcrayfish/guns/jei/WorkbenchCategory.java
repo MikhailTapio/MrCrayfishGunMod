@@ -1,7 +1,6 @@
 package com.mrcrayfish.guns.jei;
 
 import com.mojang.blaze3d.platform.Lighting;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import com.mrcrayfish.guns.Reference;
@@ -120,26 +119,30 @@ public class WorkbenchCategory implements IRecipeCategory<WorkbenchRecipe> {
         int titleX = this.window.getWidth() / 2;
         graphics.drawCenteredString(Minecraft.getInstance().font, displayName, titleX, 5, Color.WHITE.getRGB());
 
-        org.joml.Matrix4fStack stack = RenderSystem.getModelViewStack();
-        stack.pushMatrix();
+        // Submit the GUI before drawing the preview in front of its background.
+        graphics.flush();
+        PoseStack stack = graphics.pose();
+        stack.pushPose();
+        try
         {
-            stack.mul(graphics.pose().last().pose());
-            stack.translate(81, 40, 0);
+            stack.translate(81, 40, 150);
             stack.scale(40F, 40F, 40F);
-            stack.rotate(Axis.XP.rotationDegrees(-5F));
+            stack.mulPose(Axis.XP.rotationDegrees(-5F));
             float partialTicks = Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true);
-            stack.rotate(Axis.YP.rotationDegrees(Minecraft.getInstance().player.tickCount + partialTicks));
+            stack.mulPose(Axis.YP.rotationDegrees(Minecraft.getInstance().player.tickCount + partialTicks));
             stack.scale(-1, -1, -1);
-            RenderSystem.applyModelViewMatrix();
 
             BakedModel model = RenderUtil.getModel(output);
             Lighting.setupFor3DItems();
 
-            MultiBufferSource.BufferSource buffer = Minecraft.getInstance().renderBuffers().bufferSource();
-            Minecraft.getInstance().getItemRenderer().render(output, ItemDisplayContext.FIXED, false, new PoseStack(), buffer, 15728880, OverlayTexture.NO_OVERLAY, model);
+            MultiBufferSource.BufferSource buffer = graphics.bufferSource();
+            Minecraft.getInstance().getItemRenderer().render(output, ItemDisplayContext.FIXED, false, stack, buffer, 15728880, OverlayTexture.NO_OVERLAY, model);
             buffer.endBatch();
         }
-        stack.popMatrix();
-        RenderSystem.applyModelViewMatrix();
+        finally
+        {
+            stack.popPose();
+            Lighting.setupFor3DItems();
+        }
     }
 }
