@@ -4,15 +4,15 @@ import com.mrcrayfish.guns.Reference;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.ModelEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.client.event.ModelEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 
 /**
  * Author: MrCrayfish
  */
-@Mod.EventBusSubscriber(modid = Reference.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = Reference.MOD_ID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
 public enum SpecialModels
 {
     ASSAULT_RIFLE("gun/assault_rifle"),
@@ -31,7 +31,7 @@ public enum SpecialModels
     /**
      * The location of an item model in the [MOD_ID]/models/special/[NAME] folder
      */
-    private final ResourceLocation modelLocation;
+    private final net.minecraft.client.resources.model.ModelResourceLocation modelLocation;
 
     /**
      * Cached model
@@ -45,7 +45,7 @@ public enum SpecialModels
      */
     SpecialModels(String modelName)
     {
-        this.modelLocation = new ResourceLocation(Reference.MOD_ID, "special/" + modelName);
+        this.modelLocation = net.minecraft.client.resources.model.ModelResourceLocation.standalone(ResourceLocation.fromNamespaceAndPath(Reference.MOD_ID, "special/" + modelName));
     }
 
     /**

@@ -12,9 +12,8 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.common.util.INBTSerializable;
-import net.minecraftforge.fml.DistExecutor;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.fml.loading.FMLEnvironment;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -24,7 +23,7 @@ import java.util.function.Supplier;
 /**
  * Author: MrCrayfish
  */
-public class SightAnimation implements INBTSerializable<CompoundTag>, IEditorMenu
+public class SightAnimation implements IEditorMenu
 {
     public static final SightAnimation DEFAULT = new SightAnimation();
 
@@ -75,7 +74,7 @@ public class SightAnimation implements INBTSerializable<CompoundTag>, IEditorMen
     @Override
     public void getEditorWidgets(List<Pair<Component, Supplier<IDebugWidget>>> widgets)
     {
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
+        if(FMLEnvironment.dist == Dist.CLIENT) {
             widgets.add(Pair.of(Component.literal("Debug: ").withStyle(ChatFormatting.BOLD, ChatFormatting.GOLD).append(Component.literal("Force Aim").withStyle(ChatFormatting.WHITE)), () -> new DebugToggle(Debug.isForceAim(), Debug::setForceAim)));
             widgets.add(Pair.of(Component.literal("Viewport Curve"), () -> new DebugEnum<>(Easings.class, this.viewportCurve, value -> {
                 this.viewportCurve = value;
@@ -89,10 +88,9 @@ public class SightAnimation implements INBTSerializable<CompoundTag>, IEditorMen
             widgets.add(Pair.of(Component.literal("Aim Transform Curve"), () -> new DebugEnum<>(Easings.class, this.aimTransformCurve, value -> {
                 this.aimTransformCurve = value;
             })));
-        });
+        }
     }
 
-    @Override
     public CompoundTag serializeNBT()
     {
         CompoundTag tag = new CompoundTag();
@@ -103,7 +101,6 @@ public class SightAnimation implements INBTSerializable<CompoundTag>, IEditorMen
         return tag;
     }
 
-    @Override
     public void deserializeNBT(CompoundTag tag)
     {
         if(tag.contains("ViewportCurve", Tag.TAG_STRING))

@@ -1,10 +1,14 @@
 package com.mrcrayfish.guns.common.container;
 
+import com.mrcrayfish.guns.init.ModDataComponents;
+import net.minecraft.world.item.component.ItemContainerContents;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.mrcrayfish.guns.common.Gun;
 import com.mrcrayfish.guns.common.container.slot.AttachmentSlot;
 import com.mrcrayfish.guns.init.ModContainers;
 import com.mrcrayfish.guns.item.attachment.IAttachment;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -99,19 +103,14 @@ public class AttachmentContainer extends AbstractContainerMenu
     @Override
     public void slotsChanged(Container inventoryIn)
     {
-        CompoundTag attachments = new CompoundTag();
-
-        for(int i = 0; i < this.getWeaponInventory().getContainerSize(); i++)
+        if(!this.loaded) return;
+        List<ItemStack> attachments = new ArrayList<>();
+        for(int i = 0; i < this.weaponInventory.getContainerSize(); i++)
         {
-            ItemStack attachment = this.getSlot(i).getItem();
-            if(attachment.getItem() instanceof IAttachment)
-            {
-                attachments.put(((IAttachment) attachment.getItem()).getType().getTagKey(), attachment.save(new CompoundTag()));
-            }
+            attachments.add(this.weaponInventory.getItem(i));
         }
-
-        CompoundTag tag = this.weapon.getOrCreateTag();
-        tag.put("Attachments", attachments);
+        this.weapon.set(ModDataComponents.ATTACHMENTS, ItemContainerContents.fromItems(attachments));
+        this.playerInventory.setChanged();
         super.broadcastChanges();
     }
 

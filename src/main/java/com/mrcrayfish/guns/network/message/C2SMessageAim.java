@@ -1,12 +1,11 @@
 package com.mrcrayfish.guns.network.message;
 
 import com.mrcrayfish.framework.api.network.MessageContext;
-import com.mrcrayfish.framework.api.network.message.PlayMessage;
 import com.mrcrayfish.guns.init.ModSyncedDataKeys;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 
-public class C2SMessageAim extends PlayMessage<C2SMessageAim>
+public class C2SMessageAim
 {
 	private boolean aiming;
 
@@ -17,24 +16,21 @@ public class C2SMessageAim extends PlayMessage<C2SMessageAim>
 		this.aiming = aiming;
 	}
 
-	@Override
-	public void encode(C2SMessageAim message, FriendlyByteBuf buffer)
+	public static void encode(C2SMessageAim message, RegistryFriendlyByteBuf buffer)
 	{
 		buffer.writeBoolean(message.aiming);
 	}
 
-	@Override
-	public C2SMessageAim decode(FriendlyByteBuf buffer)
+	public static C2SMessageAim decode(RegistryFriendlyByteBuf buffer)
 	{
 		return new C2SMessageAim(buffer.readBoolean());
 	}
 
-	@Override
-	public void handle(C2SMessageAim message, MessageContext context)
+	public static void handle(C2SMessageAim message, MessageContext context)
 	{
 		context.execute(() ->
 		{
-			ServerPlayer player = context.getPlayer();
+			ServerPlayer player = context.getPlayer().filter(ServerPlayer.class::isInstance).map(ServerPlayer.class::cast).orElse(null);
 			if(player != null && !player.isSpectator())
 			{
 				ModSyncedDataKeys.AIMING.setValue(player, message.aiming);

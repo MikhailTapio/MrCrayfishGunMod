@@ -5,7 +5,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.tags.ItemTagsProvider;
 import net.minecraft.world.level.block.Block;
-import net.minecraftforge.common.data.ExistingFileHelper;
+import net.neoforged.neoforge.common.data.ExistingFileHelper;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -19,5 +19,13 @@ public class ItemTagGen extends ItemTagsProvider
     @Override
     protected void addTags(HolderLookup.Provider provider)
     {
+        var guns = this.tag(com.mrcrayfish.guns.enchantment.EnchantmentTypes.GUN);
+        com.mrcrayfish.guns.init.ModItems.REGISTER.getEntries().forEach(item -> {
+            if(item.get() instanceof com.mrcrayfish.guns.item.GunItem) guns.add(item.get());
+        });
+        this.tag(com.mrcrayfish.guns.enchantment.EnchantmentTypes.SEMI_AUTO_GUN)
+            .add(com.mrcrayfish.guns.init.ModItems.PISTOL.get(), com.mrcrayfish.guns.init.ModItems.SHOTGUN.get(),
+                com.mrcrayfish.guns.init.ModItems.RIFLE.get(), com.mrcrayfish.guns.init.ModItems.HEAVY_RIFLE.get(),
+                com.mrcrayfish.guns.init.ModItems.BAZOOKA.get(), com.mrcrayfish.guns.init.ModItems.GRENADE_LAUNCHER.get());
     }
 }

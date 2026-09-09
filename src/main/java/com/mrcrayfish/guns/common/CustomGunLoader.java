@@ -8,15 +8,16 @@ import com.mrcrayfish.guns.GunMod;
 import com.mrcrayfish.guns.Reference;
 import com.mrcrayfish.guns.annotation.Validator;
 import net.minecraft.Util;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.event.AddReloadListenerEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.neoforge.event.AddReloadListenerEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 
 import javax.annotation.Nullable;
 import java.io.InvalidObjectException;
@@ -26,24 +27,27 @@ import java.util.Map;
 /**
  * Author: MrCrayfish
  */
-@Mod.EventBusSubscriber(modid = Reference.MOD_ID)
+@EventBusSubscriber(modid = Reference.MOD_ID)
 public class CustomGunLoader extends SimpleJsonResourceReloadListener
 {
-    private static final Gson GSON_INSTANCE = Util.make(() -> {
+    private static Gson createGson(HolderLookup.Provider registries) {
         GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(ResourceLocation.class, JsonDeserializers.RESOURCE_LOCATION);
-        builder.registerTypeAdapter(ItemStack.class, JsonDeserializers.ITEM_STACK);
+        builder.registerTypeAdapter(ItemStack.class, JsonDeserializers.itemStack(registries));
         builder.registerTypeAdapter(GripType.class, JsonDeserializers.GRIP_TYPE);
         return builder.create();
-    });
+    }
 
     private static CustomGunLoader instance;
 
     private Map<ResourceLocation, CustomGun> customGunMap = new HashMap<>();
 
-    public CustomGunLoader()
+    private final Gson gson;
+
+    public CustomGunLoader(HolderLookup.Provider registries)
     {
-        super(GSON_INSTANCE, "custom_guns");
+        super(createGson(registries), "custom_guns");
+        this.gson = createGson(registries);
     }
 
     @Override
@@ -54,7 +58,7 @@ public class CustomGunLoader extends SimpleJsonResourceReloadListener
         {
             try
             {
-                CustomGun customGun = GSON_INSTANCE.fromJson(object, CustomGun.class);
+                CustomGun customGun = this.gson.fromJson(object, CustomGun.class);
                 if(customGun != null && Validator.isValidObject(customGun))
                 {
                     builder.put(resourceLocation, customGun);
@@ -82,12 +86,12 @@ public class CustomGunLoader extends SimpleJsonResourceReloadListener
      *
      * @param buffer a packet buffer get
      */
-    public void writeCustomGuns(FriendlyByteBuf buffer)
+    public void writeCustomGuns(RegistryFriendlyByteBuf buffer)
     {
         buffer.writeVarInt(this.customGunMap.size());
         this.customGunMap.forEach((id, gun) -> {
             buffer.writeResourceLocation(id);
-            buffer.writeNbt(gun.serializeNBT());
+            buffer.writeNbt(gun.serializeNBT(buffer.registryAccess()));
         });
     }
 
@@ -97,7 +101,7 @@ public class CustomGunLoader extends SimpleJsonResourceReloadListener
      * @param buffer a packet buffer get
      * @return a map of registered guns from the server
      */
-    public static ImmutableMap<ResourceLocation, CustomGun> readCustomGuns(FriendlyByteBuf buffer)
+    public static ImmutableMap<ResourceLocation, CustomGun> readCustomGuns(RegistryFriendlyByteBuf buffer)
     {
         int size = buffer.readVarInt();
         if(size > 0)
@@ -107,7 +111,7 @@ public class CustomGunLoader extends SimpleJsonResourceReloadListener
             {
                 ResourceLocation id = buffer.readResourceLocation();
                 CustomGun customGun = new CustomGun();
-                customGun.deserializeNBT(buffer.readNbt());
+                customGun.deserializeNBT(buffer.registryAccess(), buffer.readNbt());
                 builder.put(id, customGun);
             }
             return builder.build();
@@ -118,7 +122,7 @@ public class CustomGunLoader extends SimpleJsonResourceReloadListener
     @SubscribeEvent
     public static void addReloadListenerEvent(AddReloadListenerEvent event)
     {
-        CustomGunLoader customGunLoader = new CustomGunLoader();
+        CustomGunLoader customGunLoader = new CustomGunLoader(event.getRegistryAccess());
         event.addListener(customGunLoader);
         CustomGunLoader.instance = customGunLoader;
     }

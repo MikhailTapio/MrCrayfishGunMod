@@ -14,19 +14,19 @@ import net.minecraft.world.entity.player.Player;
 public class ModSyncedDataKeys
 {
     public static final SyncedDataKey<Player, Boolean> AIMING = SyncedDataKey.builder(SyncedClassKey.PLAYER, Serializers.BOOLEAN)
-            .id(new ResourceLocation(Reference.MOD_ID, "aiming"))
+            .id(ResourceLocation.fromNamespaceAndPath(Reference.MOD_ID, "aiming"))
             .defaultValueSupplier(() -> false)
             .resetOnDeath()
             .build();
 
     public static final SyncedDataKey<Player, Boolean> SHOOTING = SyncedDataKey.builder(SyncedClassKey.PLAYER, Serializers.BOOLEAN)
-            .id(new ResourceLocation(Reference.MOD_ID, "shooting"))
+            .id(ResourceLocation.fromNamespaceAndPath(Reference.MOD_ID, "shooting"))
             .defaultValueSupplier(() -> false)
             .resetOnDeath()
             .build();
 
     public static final SyncedDataKey<Player, Boolean> RELOADING = SyncedDataKey.builder(SyncedClassKey.PLAYER, Serializers.BOOLEAN)
-            .id(new ResourceLocation(Reference.MOD_ID, "reloading"))
+            .id(ResourceLocation.fromNamespaceAndPath(Reference.MOD_ID, "reloading"))
             .defaultValueSupplier(() -> false)
             .resetOnDeath()
             .build();

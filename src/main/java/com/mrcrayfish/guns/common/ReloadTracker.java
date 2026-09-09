@@ -1,5 +1,7 @@
 package com.mrcrayfish.guns.common;
 
+import com.mrcrayfish.guns.util.GunItemData;
+
 import com.mrcrayfish.framework.api.network.LevelLocation;
 import com.mrcrayfish.guns.Config;
 import com.mrcrayfish.guns.Reference;
@@ -14,10 +16,10 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -26,7 +28,7 @@ import java.util.WeakHashMap;
  * Author: MrCrayfish
  */
 @SuppressWarnings("unused")
-@Mod.EventBusSubscriber(modid = Reference.MOD_ID)
+@EventBusSubscriber(modid = Reference.MOD_ID)
 public class ReloadTracker
 {
     private static final Map<Player, ReloadTracker> RELOAD_TRACKER_MAP = new WeakHashMap<>();
@@ -60,7 +62,7 @@ public class ReloadTracker
      */
     private boolean isWeaponFull()
     {
-        CompoundTag tag = this.stack.getOrCreateTag();
+        CompoundTag tag = GunItemData.getOrCreateTag(this.stack);
         return tag.getInt("AmmoCount") >= GunEnchantmentHelper.getAmmoCapacity(this.stack, this.gun);
     }
 
@@ -83,12 +85,13 @@ public class ReloadTracker
         if(!ammo.isEmpty())
         {
             int amount = Math.min(ammo.getCount(), this.gun.getGeneral().getReloadAmount());
-            CompoundTag tag = this.stack.getTag();
+            CompoundTag tag = GunItemData.getTag(this.stack);
             if(tag != null)
             {
                 int maxAmmo = GunEnchantmentHelper.getAmmoCapacity(this.stack, this.gun);
                 amount = Math.min(amount, maxAmmo - tag.getInt("AmmoCount"));
                 tag.putInt("AmmoCount", tag.getInt("AmmoCount") + amount);
+                GunItemData.setTag(this.stack, tag);
             }
             ammo.shrink(amount);
             // Trigger the post action on ammo consumption, like Container#setChanged.
@@ -103,16 +106,16 @@ public class ReloadTracker
             double soundY = player.getY() + 1.0;
             double soundZ = player.getZ();
             S2CMessageGunSound message = new S2CMessageGunSound(reloadSound, SoundSource.PLAYERS, (float) soundX, (float) soundY, (float) soundZ, 1.0F, 1.0F, player.getId(), false, true);
-            PacketHandler.getPlayChannel().sendToNearbyPlayers(() -> LevelLocation.create(player.level(), soundX, soundY, soundZ, radius), message);
+            PacketHandler.getPlayChannel().sendToNearbyPlayers(() -> LevelLocation.create((net.minecraft.server.level.ServerLevel) player.level(), soundX, soundY, soundZ, radius), message);
         }
     }
 
     @SubscribeEvent
-    public static void onPlayerTick(TickEvent.PlayerTickEvent event)
+    public static void onPlayerTick(PlayerTickEvent.Pre event)
     {
-        if(event.phase == TickEvent.Phase.START && !event.player.level().isClientSide)
+        if(!event.getEntity().level().isClientSide)
         {
-            Player player = event.player;
+            Player player = event.getEntity();
             if(ModSyncedDataKeys.RELOADING.getValue(player))
             {
                 if(!RELOAD_TRACKER_MAP.containsKey(player))
@@ -151,7 +154,7 @@ public class ReloadTracker
                                 double soundZ = finalPlayer.getZ();
                                 double radius = Config.SERVER.reloadMaxDistance.get();
                                 S2CMessageGunSound messageSound = new S2CMessageGunSound(cockSound, SoundSource.PLAYERS, (float) soundX, (float) soundY, (float) soundZ, 1.0F, 1.0F, finalPlayer.getId(), false, true);
-                                PacketHandler.getPlayChannel().sendToNearbyPlayers(() -> LevelLocation.create(finalPlayer.level(), soundX, soundY, soundZ, radius), messageSound);
+                                PacketHandler.getPlayChannel().sendToNearbyPlayers(() -> LevelLocation.create((net.minecraft.server.level.ServerLevel) finalPlayer.level(), soundX, soundY, soundZ, radius), messageSound);
                             }
                         });
                     }

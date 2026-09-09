@@ -5,18 +5,20 @@ import com.google.gson.JsonObject;
 import com.mrcrayfish.guns.init.ModRecipeSerializers;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementRewards;
-import net.minecraft.advancements.CriterionTriggerInstance;
-import net.minecraft.advancements.RequirementsStrategy;
+import net.minecraft.advancements.Criterion;
+import com.google.common.collect.ImmutableList;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.advancements.AdvancementRequirements;
 import net.minecraft.advancements.critereon.RecipeUnlockedTrigger;
-import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.data.recipes.RecipeCategory;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.ItemLike;
-import net.minecraftforge.common.crafting.CraftingHelper;
-import net.minecraftforge.common.crafting.conditions.ICondition;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.common.crafting.CraftingHelper;
+import net.neoforged.neoforge.common.conditions.ICondition;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -35,6 +37,7 @@ public class WorkbenchRecipeBuilder
     private final int count;
     private final List<WorkbenchIngredient> ingredients;
     private final Advancement.Builder advancementBuilder;
+    private boolean hasCriteria;
     private final List<ICondition> conditions = new ArrayList<>();
 
     private WorkbenchRecipeBuilder(@Nullable RecipeCategory category, ItemLike item, int count)
@@ -78,9 +81,10 @@ public class WorkbenchRecipeBuilder
         return this;
     }
 
-    public WorkbenchRecipeBuilder addCriterion(String name, CriterionTriggerInstance criterionIn)
+    public WorkbenchRecipeBuilder addCriterion(String name, Criterion<?> criterionIn)
     {
         this.advancementBuilder.addCriterion(name, criterionIn);
+        this.hasCriteria = true;
         return this;
     }
 
@@ -90,17 +94,19 @@ public class WorkbenchRecipeBuilder
         return this;
     }
 
-    public void build(Consumer<FinishedRecipe> consumer)
+    public void build(RecipeOutput consumer)
     {
-        ResourceLocation resourcelocation = ForgeRegistries.ITEMS.getKey(this.result);
+        ResourceLocation resourcelocation = BuiltInRegistries.ITEM.getKey(this.result);
         this.build(consumer, resourcelocation);
     }
 
-    public void build(Consumer<FinishedRecipe> consumer, ResourceLocation id)
+    public void build(RecipeOutput consumer, ResourceLocation id)
     {
         this.validate(id);
-        this.advancementBuilder.parent(new ResourceLocation("recipes/root")).addCriterion("has_the_recipe", RecipeUnlockedTrigger.unlocked(id)).rewards(AdvancementRewards.Builder.recipe(id)).requirements(RequirementsStrategy.OR);
-        consumer.accept(new WorkbenchRecipeBuilder.Result(id, this.result, this.count, this.ingredients, this.conditions, this.advancementBuilder, new ResourceLocation(id.getNamespace(), "recipes/" + (this.category != null ? this.category.getFolderName() : "") + "/" + id.getPath())));
+        this.advancementBuilder.parent(ResourceLocation.withDefaultNamespace("recipes/root")).addCriterion("has_the_recipe", RecipeUnlockedTrigger.unlocked(id)).rewards(AdvancementRewards.Builder.recipe(id)).requirements(AdvancementRequirements.Strategy.OR);
+        ResourceLocation advancementId = ResourceLocation.fromNamespaceAndPath(id.getNamespace(), "recipes/" + (this.category != null ? this.category.getFolderName() + "/" : "") + id.getPath());
+        consumer.accept(id, new WorkbenchRecipe(new ItemStack(this.result, this.count), ImmutableList.copyOf(this.ingredients)),
+            this.advancementBuilder.build(advancementId), this.conditions.toArray(ICondition[]::new));
     }
 
     /**
@@ -108,78 +114,10 @@ public class WorkbenchRecipeBuilder
      */
     private void validate(ResourceLocation id)
     {
-        if(this.advancementBuilder.getCriteria().isEmpty())
+        if(!this.hasCriteria)
         {
             throw new IllegalStateException("No way of obtaining recipe " + id);
         }
     }
 
-    public static class Result implements FinishedRecipe
-    {
-        private final ResourceLocation id;
-        private final Item item;
-        private final int count;
-        private final List<WorkbenchIngredient> ingredients;
-        private final List<ICondition> conditions;
-        private final Advancement.Builder advancement;
-        private final ResourceLocation advancementId;
-
-        public Result(ResourceLocation id, ItemLike item, int count, List<WorkbenchIngredient> ingredients, List<ICondition> conditions, Advancement.Builder advancement, ResourceLocation advancementId)
-        {
-            this.id = id;
-            this.item = item.asItem();
-            this.count = count;
-            this.ingredients = ingredients;
-            this.conditions = conditions;
-            this.advancement = advancement;
-            this.advancementId = advancementId;
-        }
-
-        @Override
-        public void serializeRecipeData(JsonObject json)
-        {
-            JsonArray conditions = new JsonArray();
-            this.conditions.forEach(condition -> conditions.add(CraftingHelper.serialize(condition)));
-            if(conditions.size() > 0)
-            {
-                json.add("conditions", conditions);
-            }
-
-            JsonArray materials = new JsonArray();
-            this.ingredients.forEach(ingredient -> materials.add(ingredient.toJson()));
-            json.add("materials", materials);
-
-            JsonObject resultObject = new JsonObject();
-            resultObject.addProperty("item", Objects.requireNonNull(ForgeRegistries.ITEMS.getKey(this.item)).toString());
-            if(this.count > 1)
-            {
-                resultObject.addProperty("count", this.count);
-            }
-            json.add("result", resultObject);
-        }
-
-        @Override
-        public ResourceLocation getId()
-        {
-            return this.id;
-        }
-
-        @Override
-        public RecipeSerializer<?> getType()
-        {
-            return ModRecipeSerializers.WORKBENCH.get();
-        }
-
-        @Override
-        public JsonObject serializeAdvancement()
-        {
-            return this.advancement.serializeToJson();
-        }
-
-        @Override
-        public ResourceLocation getAdvancementId()
-        {
-            return this.advancementId;
-        }
-    }
 }

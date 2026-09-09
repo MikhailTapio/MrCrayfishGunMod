@@ -25,8 +25,8 @@ public class DebugButton extends Button implements IDebugWidget {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+    public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         this.active = this.enabled.get();
-        super.render(graphics, mouseX, mouseY, partialTicks);
+        super.renderWidget(graphics, mouseX, mouseY, partialTicks);
     }
 }

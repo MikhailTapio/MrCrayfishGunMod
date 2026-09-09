@@ -16,8 +16,8 @@ import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 
 /**
  * Author: MrCrayfish
@@ -50,7 +50,7 @@ public class OneHandedPose implements IHeldAnimation
         int side = hand.getOpposite() == HumanoidArm.RIGHT ? 1 : -1;
         poseStack.translate(translateX * side, 0, -translateZ);
 
-        boolean slim = Minecraft.getInstance().player.getModelName().equals("slim");
+        boolean slim = Minecraft.getInstance().player.getSkin().model() == net.minecraft.client.resources.PlayerSkin.Model.SLIM;
         float armWidth = slim ? 3.0F : 4.0F;
 
         poseStack.scale(0.5F, 0.5F, 0.5F);

@@ -1,8 +1,10 @@
 {
     "pack": {
         "description": "Resources for MrCrayfish's Gun Mod",
-        "pack_format": 15,
-        "forge:resource_pack_format": 13,
-        "forge:data_pack_format": 12
+        "pack_format": 34,
+        "supported_formats": {
+            "min_inclusive": 34,
+            "max_inclusive": 48
+        }
     }
 }

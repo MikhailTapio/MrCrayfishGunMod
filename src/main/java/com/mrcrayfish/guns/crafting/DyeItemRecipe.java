@@ -3,9 +3,9 @@ package com.mrcrayfish.guns.crafting;
 import com.mrcrayfish.guns.init.ModRecipeSerializers;
 import com.mrcrayfish.guns.item.IColored;
 import net.minecraft.core.NonNullList;
-import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.inventory.CraftingContainer;
+import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.DyeItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingBookCategory;
@@ -21,18 +21,18 @@ import java.util.List;
  */
 public class DyeItemRecipe extends CustomRecipe
 {
-    public DyeItemRecipe(ResourceLocation id, CraftingBookCategory category)
+    public DyeItemRecipe(CraftingBookCategory category)
     {
-        super(id, category);
+        super(category);
     }
 
     @Override
-    public boolean matches(CraftingContainer inventory, Level worldIn)
+    public boolean matches(CraftingInput inventory, Level worldIn)
     {
         ItemStack item = ItemStack.EMPTY;
         List<ItemStack> dyes = new ArrayList<>();
 
-        for(int i = 0; i < inventory.getContainerSize(); ++i)
+        for(int i = 0; i < inventory.size(); ++i)
         {
             ItemStack stack = inventory.getItem(i);
             if(!stack.isEmpty())
@@ -60,12 +60,12 @@ public class DyeItemRecipe extends CustomRecipe
     }
 
     @Override
-    public ItemStack assemble(CraftingContainer inventory, RegistryAccess access)
+    public ItemStack assemble(CraftingInput inventory, HolderLookup.Provider access)
     {
         ItemStack item = ItemStack.EMPTY;
         List<DyeItem> dyes = new ArrayList<>();
 
-        for(int i = 0; i < inventory.getContainerSize(); ++i)
+        for(int i = 0; i < inventory.size(); ++i)
         {
             ItemStack stack = inventory.getItem(i);
             if(!stack.isEmpty())
@@ -99,7 +99,7 @@ public class DyeItemRecipe extends CustomRecipe
     }
 
     @Override
-    public ItemStack getResultItem(RegistryAccess access)
+    public ItemStack getResultItem(HolderLookup.Provider access)
     {
         return ItemStack.EMPTY;
     }
@@ -111,13 +111,13 @@ public class DyeItemRecipe extends CustomRecipe
     }
 
     @Override
-    public NonNullList<ItemStack> getRemainingItems(CraftingContainer inventory)
+    public NonNullList<ItemStack> getRemainingItems(CraftingInput inventory)
     {
-        NonNullList<ItemStack> remainingItems = NonNullList.withSize(inventory.getContainerSize(), ItemStack.EMPTY);
+        NonNullList<ItemStack> remainingItems = NonNullList.withSize(inventory.size(), ItemStack.EMPTY);
         for(int i = 0; i < remainingItems.size(); ++i)
         {
             ItemStack stack = inventory.getItem(i);
-            remainingItems.set(i, net.minecraftforge.common.ForgeHooks.getCraftingRemainingItem(stack));
+            remainingItems.set(i, stack.getCraftingRemainingItem());
         }
         return remainingItems;
     }

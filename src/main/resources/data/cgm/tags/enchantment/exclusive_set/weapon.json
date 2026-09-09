@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "cgm:lightweight",
+    "cgm:over_capacity",
+    "cgm:trigger_finger"
+  ]
+}

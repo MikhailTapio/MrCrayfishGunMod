@@ -17,9 +17,9 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.bus.api.SubscribeEvent;
 import org.joml.Matrix4f;
 
 import java.util.HashMap;
@@ -71,12 +71,12 @@ public class BulletTrailRenderingHandler
     }
 
     @SubscribeEvent
-    public void onClientTick(TickEvent.ClientTickEvent event)
+    public void onClientTick(ClientTickEvent.Post event)
     {
         Level world = Minecraft.getInstance().level;
         if(world != null)
         {
-            if(event.phase == TickEvent.Phase.END)
+            
             {
                 this.bullets.values().forEach(BulletTrail::tick);
                 this.bullets.values().removeIf(BulletTrail::isDead);
@@ -149,14 +149,14 @@ public class BulletTrailRenderingHandler
         {
             RenderType bulletType = GunRenderType.getBulletTrail();
             VertexConsumer builder = renderTypeBuffer.getBuffer(bulletType);
-            builder.vertex(matrix4f, 0, 0, -0.035F).color(red, green, blue, alpha).uv2(15728880).endVertex();
-            builder.vertex(matrix4f, 0, 0, 0.035F).color(red, green, blue, alpha).uv2(15728880).endVertex();
-            builder.vertex(matrix4f, 0, -trailLength, 0).color(red, green, blue, alpha).uv2(15728880).endVertex();
-            builder.vertex(matrix4f, 0, -trailLength, 0).color(red, green, blue, alpha).uv2(15728880).endVertex();
-            builder.vertex(matrix4f, -0.035F, 0, 0).color(red, green, blue, alpha).uv2(15728880).endVertex();
-            builder.vertex(matrix4f, 0.035F, 0, 0).color(red, green, blue, alpha).uv2(15728880).endVertex();
-            builder.vertex(matrix4f, 0, -trailLength, 0).color(red, green, blue, alpha).uv2(15728880).endVertex();
-            builder.vertex(matrix4f, 0, -trailLength, 0).color(red, green, blue, alpha).uv2(15728880).endVertex();
+            builder.addVertex(matrix4f, 0, 0, -0.035F).setColor(red, green, blue, alpha).setLight(15728880);
+            builder.addVertex(matrix4f, 0, 0, 0.035F).setColor(red, green, blue, alpha).setLight(15728880);
+            builder.addVertex(matrix4f, 0, -trailLength, 0).setColor(red, green, blue, alpha).setLight(15728880);
+            builder.addVertex(matrix4f, 0, -trailLength, 0).setColor(red, green, blue, alpha).setLight(15728880);
+            builder.addVertex(matrix4f, -0.035F, 0, 0).setColor(red, green, blue, alpha).setLight(15728880);
+            builder.addVertex(matrix4f, 0.035F, 0, 0).setColor(red, green, blue, alpha).setLight(15728880);
+            builder.addVertex(matrix4f, 0, -trailLength, 0).setColor(red, green, blue, alpha).setLight(15728880);
+            builder.addVertex(matrix4f, 0, -trailLength, 0).setColor(red, green, blue, alpha).setLight(15728880);
             Minecraft.getInstance().renderBuffers().bufferSource().endBatch(bulletType);
         }
 

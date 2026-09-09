@@ -9,10 +9,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemCooldowns;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.client.event.RenderHandEvent;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.EventPriority;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.neoforged.neoforge.client.event.RenderHandEvent;
+import net.neoforged.neoforge.client.event.RenderFrameEvent;
+import net.neoforged.bus.api.EventPriority;
+import net.neoforged.bus.api.SubscribeEvent;
 
 import java.util.Random;
 
@@ -61,9 +61,9 @@ public class RecoilHandler
     }
 
     @SubscribeEvent
-    public void onRenderTick(TickEvent.RenderTickEvent event)
+    public void onRenderTick(RenderFrameEvent.Post event)
     {
-        if(event.phase != TickEvent.Phase.END || this.cameraRecoil <= 0)
+        if(this.cameraRecoil <= 0)
             return;
 
         Minecraft mc = Minecraft.getInstance();
@@ -73,7 +73,7 @@ public class RecoilHandler
         if(!Config.SERVER.enableCameraRecoil.get())
             return;
 
-        float recoilAmount = this.cameraRecoil * mc.getDeltaFrameTime() * 0.15F;
+        float recoilAmount = this.cameraRecoil * mc.getTimer().getGameTimeDeltaTicks() * 0.15F;
         float startProgress = this.progressCameraRecoil / this.cameraRecoil;
         float endProgress = (this.progressCameraRecoil + recoilAmount) / this.cameraRecoil;
 
@@ -108,7 +108,7 @@ public class RecoilHandler
 
         Gun modifiedGun = gunItem.getModifiedGun(heldItem);
         ItemCooldowns tracker = Minecraft.getInstance().player.getCooldowns();
-        float cooldown = tracker.getCooldownPercent(gunItem, Minecraft.getInstance().getFrameTime());
+        float cooldown = tracker.getCooldownPercent(gunItem, Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true));
         cooldown = cooldown >= modifiedGun.getGeneral().getRecoilDurationOffset() ? (cooldown - modifiedGun.getGeneral().getRecoilDurationOffset()) / (1.0F - modifiedGun.getGeneral().getRecoilDurationOffset()) : 0.0F;
         if(cooldown >= 0.8)
         {

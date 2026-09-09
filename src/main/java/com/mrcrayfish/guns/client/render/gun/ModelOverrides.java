@@ -5,12 +5,11 @@ import com.mrcrayfish.guns.item.GunItem;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -19,7 +18,7 @@ import java.util.Map;
 /**
  * Author: MrCrayfish
  */
-@Mod.EventBusSubscriber(modid = Reference.MOD_ID, value = Dist.CLIENT)
+@EventBusSubscriber(modid = Reference.MOD_ID, value = Dist.CLIENT)
 public class ModelOverrides
 {
     private static final Map<Item, IOverrideModel> MODEL_MAP = new HashMap<>();
@@ -34,9 +33,13 @@ public class ModelOverrides
     {
         if(MODEL_MAP.putIfAbsent(item, model) == null)
         {
-            /* Register model overrides as an event for ease. Doesn't create an extra overhead because
-             * Forge will just ignore it if it contains no events */
-            MinecraftForge.EVENT_BUS.register(model);
+            // NeoForge rejects objects without event listeners; retain automatic registration
+            // for animated models that actually subscribe to events.
+            if(java.util.Arrays.stream(model.getClass().getMethods())
+                    .anyMatch(method -> method.isAnnotationPresent(SubscribeEvent.class)))
+            {
+                NeoForge.EVENT_BUS.register(model);
+            }
         }
     }
 
@@ -64,11 +67,11 @@ public class ModelOverrides
     }
 
     @SubscribeEvent
-    public static void onClientPlayerTick(TickEvent.PlayerTickEvent event)
+    public static void onClientPlayerTick(PlayerTickEvent.Pre event)
     {
-        if(event.phase == TickEvent.Phase.START && event.side == LogicalSide.CLIENT)
+        if(event.getEntity().level().isClientSide)
         {
-            tick(event.player);
+            tick(event.getEntity());
         }
     }
 

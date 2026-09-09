@@ -142,10 +142,10 @@ public class BulletHoleParticle extends TextureSheetParticle
         float f6 = this.getV1();
         int j = this.getLightColor(partialTicks);
         float fade = Config.CLIENT.particle.bulletHoleFadeThreshold.get() >= 1.0f ? 1.0f : 1.0f - (Math.max((float) this.age - (float) this.lifetime * Config.CLIENT.particle.bulletHoleFadeThreshold.get().floatValue(), 0) / ((float) this.lifetime - (float) this.lifetime * Config.CLIENT.particle.bulletHoleFadeThreshold.get().floatValue()));
-        buffer.vertex(points[0].x(), points[0].y(), points[0].z()).uv(f8, f6).color(this.rCol, this.gCol, this.bCol, this.alpha * fade).uv2(j).endVertex();
-        buffer.vertex(points[1].x(), points[1].y(), points[1].z()).uv(f8, f5).color(this.rCol, this.gCol, this.bCol, this.alpha * fade).uv2(j).endVertex();
-        buffer.vertex(points[2].x(), points[2].y(), points[2].z()).uv(f7, f5).color(this.rCol, this.gCol, this.bCol, this.alpha * fade).uv2(j).endVertex();
-        buffer.vertex(points[3].x(), points[3].y(), points[3].z()).uv(f7, f6).color(this.rCol, this.gCol, this.bCol, this.alpha * fade).uv2(j).endVertex();
+        buffer.addVertex(points[0].x(), points[0].y(), points[0].z()).setUv(f8, f6).setColor(this.rCol, this.gCol, this.bCol, this.alpha * fade).setLight(j);
+        buffer.addVertex(points[1].x(), points[1].y(), points[1].z()).setUv(f8, f5).setColor(this.rCol, this.gCol, this.bCol, this.alpha * fade).setLight(j);
+        buffer.addVertex(points[2].x(), points[2].y(), points[2].z()).setUv(f7, f5).setColor(this.rCol, this.gCol, this.bCol, this.alpha * fade).setLight(j);
+        buffer.addVertex(points[3].x(), points[3].y(), points[3].z()).setUv(f7, f6).setColor(this.rCol, this.gCol, this.bCol, this.alpha * fade).setLight(j);
     }
 
     @Override

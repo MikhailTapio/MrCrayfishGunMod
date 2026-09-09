@@ -14,10 +14,9 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.LogicalSide;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.bus.api.SubscribeEvent;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -111,20 +110,20 @@ public class BoundingBoxManager
     }
 
     @SubscribeEvent(receiveCanceled = true)
-    public void onPlayerTick(TickEvent.PlayerTickEvent event)
+    public void onPlayerTick(PlayerTickEvent.Post event)
     {
         if(!Config.COMMON.gameplay.improvedHitboxes.get())
             return;
 
-        if(event.side == LogicalSide.SERVER && event.phase == TickEvent.Phase.END)
+        if(!event.getEntity().level().isClientSide)
         {
-            if(event.player.isSpectator())
+            if(event.getEntity().isSpectator())
             {
-                playerBoxes.remove(event.player);
+                playerBoxes.remove(event.getEntity());
                 return;
             }
-            LinkedList<AABB> boxes = playerBoxes.computeIfAbsent(event.player, player -> new LinkedList<>());
-            boxes.addFirst(event.player.getBoundingBox());
+            LinkedList<AABB> boxes = playerBoxes.computeIfAbsent(event.getEntity(), player -> new LinkedList<>());
+            boxes.addFirst(event.getEntity().getBoundingBox());
             if(boxes.size() > 20)
             {
                 boxes.removeLast();

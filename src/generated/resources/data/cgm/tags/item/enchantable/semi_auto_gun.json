@@ -1,0 +1,10 @@
+{
+  "values": [
+    "cgm:pistol",
+    "cgm:shotgun",
+    "cgm:rifle",
+    "cgm:heavy_rifle",
+    "cgm:bazooka",
+    "cgm:grenade_launcher"
+  ]
+}

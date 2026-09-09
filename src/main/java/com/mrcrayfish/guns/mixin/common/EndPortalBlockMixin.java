@@ -1,5 +1,7 @@
 package com.mrcrayfish.guns.mixin.common;
 
+import com.mrcrayfish.guns.util.GunItemData;
+
 import com.mrcrayfish.guns.item.GunItem;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
@@ -19,16 +21,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(EndPortalBlock.class)
 public class EndPortalBlockMixin
 {
-    @Inject(method = "entityInside", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;changeDimension(Lnet/minecraft/server/level/ServerLevel;)Lnet/minecraft/world/entity/Entity;"))
+    @Inject(method = "entityInside", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;setAsInsidePortal(Lnet/minecraft/world/level/block/Portal;Lnet/minecraft/core/BlockPos;)V"))
     private void beforeChangeDimension(BlockState state, Level worldIn, BlockPos pos, Entity entityIn, CallbackInfo ci)
     {
-        if(worldIn.dimension() == Level.END && entityIn instanceof ItemEntity)
+        if(!worldIn.isClientSide && worldIn.dimension() == Level.END && entityIn instanceof ItemEntity)
         {
             ItemStack stack = ((ItemEntity) entityIn).getItem();
             if(stack.getItem() instanceof GunItem)
             {
                 ItemStack gun = stack.copy();
-                gun.getOrCreateTag().putFloat("Scale", 2.0F);
+                net.minecraft.nbt.CompoundTag tag = GunItemData.getTag(gun);
+                tag.putFloat("Scale", 2.0F);
+                GunItemData.setTag(gun, tag);
                 ((ItemEntity) entityIn).setItem(gun);
             }
         }

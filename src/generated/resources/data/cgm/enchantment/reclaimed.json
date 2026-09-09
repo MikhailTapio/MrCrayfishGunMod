@@ -1,0 +1,22 @@
+{
+  "anvil_cost": 8,
+  "description": {
+    "translate": "enchantment.cgm.reclaimed"
+  },
+  "effects": {},
+  "exclusive_set": "#cgm:exclusive_set/ammo",
+  "max_cost": {
+    "base": 25,
+    "per_level_above_first": 10
+  },
+  "max_level": 2,
+  "min_cost": {
+    "base": 15,
+    "per_level_above_first": 10
+  },
+  "slots": [
+    "mainhand"
+  ],
+  "supported_items": "#cgm:enchantable/gun",
+  "weight": 1
+}

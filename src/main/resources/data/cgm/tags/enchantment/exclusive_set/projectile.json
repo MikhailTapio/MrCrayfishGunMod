@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "cgm:collateral",
+    "cgm:accelerator",
+    "cgm:puncturing",
+    "cgm:fire_starter"
+  ]
+}

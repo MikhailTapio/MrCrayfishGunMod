@@ -1,0 +1,13 @@
+{
+  "type": "cgm:workbench",
+  "materials": [
+    {
+      "count": 36,
+      "tag": "c:ingots/iron"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "cgm:heavy_rifle"
+  }
+}

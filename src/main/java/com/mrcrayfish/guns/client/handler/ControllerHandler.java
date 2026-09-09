@@ -22,9 +22,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.TickEvent;
+import net.neoforged.bus.api.SubscribeEvent;
 
 /**
  * Author: MrCrayfish
@@ -34,7 +34,7 @@ public class ControllerHandler
     private static int reloadCounter = -1;
 
     public static void init() {
-        MinecraftForge.EVENT_BUS.register(new ControllerHandler());
+        NeoForge.EVENT_BUS.register(new ControllerHandler());
         ControllerEvents.INPUT.register((controller, newButton, originalButton, state) -> {
             Player player = Minecraft.getInstance().player;
             Level world = Minecraft.getInstance().level;

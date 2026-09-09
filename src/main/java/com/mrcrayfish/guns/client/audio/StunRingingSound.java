@@ -26,7 +26,7 @@ public class StunRingingSound extends AbstractTickableSoundInstance
         Player player = Minecraft.getInstance().player;
         if(player != null && player.isAlive())
         {
-            MobEffectInstance effect = player.getEffect(ModEffects.DEAFENED.get());
+            MobEffectInstance effect = player.getEffect(ModEffects.DEAFENED);
             if(effect != null)
             {
                 this.x = (float) player.getX();

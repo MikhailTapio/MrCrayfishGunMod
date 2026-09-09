@@ -1,5 +1,7 @@
 package com.mrcrayfish.guns.client.screen;
 
+import com.mrcrayfish.guns.util.GunItemData;
+
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -35,7 +37,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.*;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
@@ -49,7 +51,7 @@ import java.util.stream.Stream;
  * Author: MrCrayfish
  */
 public class WorkbenchScreen extends AbstractContainerScreen<WorkbenchContainer> {
-    private static final ResourceLocation GUI_BASE = new ResourceLocation("cgm:textures/gui/workbench.png");
+    private static final ResourceLocation GUI_BASE = ResourceLocation.parse("cgm:textures/gui/workbench.png");
     private static boolean showRemaining = false;
 
     private Tab currentTab;
@@ -96,7 +98,7 @@ public class WorkbenchScreen extends AbstractContainerScreen<WorkbenchContainer>
 
         if (!weapons.isEmpty()) {
             ItemStack icon = new ItemStack(ModItems.ASSAULT_RIFLE.get());
-            icon.getOrCreateTag().putInt("AmmoCount", ModItems.ASSAULT_RIFLE.get().getGun().getGeneral().getMaxAmmo());
+            icon.set(com.mrcrayfish.guns.init.ModDataComponents.AMMO_COUNT, ModItems.ASSAULT_RIFLE.get().getGun().getGeneral().getMaxAmmo());
             this.tabs.add(new Tab(icon, "weapons", weapons));
         }
 
@@ -121,7 +123,7 @@ public class WorkbenchScreen extends AbstractContainerScreen<WorkbenchContainer>
         if (stack.getItem() instanceof IAmmo) {
             return true;
         }
-        ResourceLocation id = ForgeRegistries.ITEMS.getKey(stack.getItem());
+        ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
         Objects.requireNonNull(id);
         for (GunItem gunItem : NetworkGunManager.getClientRegisteredGuns()) {
             if (id.equals(gunItem.getModifiedGun(stack).getProjectile().getItem())) {
@@ -159,7 +161,7 @@ public class WorkbenchScreen extends AbstractContainerScreen<WorkbenchContainer>
         {
             int index = this.currentTab.getCurrentIndex();
             WorkbenchRecipe recipe = this.currentTab.getRecipes().get(index);
-            ResourceLocation registryName = recipe.getId();
+            ResourceLocation registryName = WorkbenchRecipes.getId(this.minecraft.level, recipe);
             PacketHandler.getPlayChannel().sendToServer(new C2SMessageCraft(registryName, this.workbench.getBlockPos()));
         }).pos(this.leftPos + 195, this.topPos + 16).size(74, 20).build());
         this.btnCraft.active = false;
@@ -197,11 +199,7 @@ public class WorkbenchScreen extends AbstractContainerScreen<WorkbenchContainer>
                     ItemStack dyeStack = this.workbench.getItem(0);
                     if (dyeStack.getItem() instanceof DyeItem) {
                         DyeColor color = ((DyeItem) dyeStack.getItem()).getDyeColor();
-                        float[] components = color.getTextureDiffuseColors();
-                        int red = (int) (components[0] * 255F);
-                        int green = (int) (components[1] * 255F);
-                        int blue = (int) (components[2] * 255F);
-                        colored.setColor(item, ((red & 0xFF) << 16) | ((green & 0xFF) << 8) | ((blue & 0xFF)));
+                        colored.setColor(item, color.getTextureDiffuseColor());
                     } else {
                         colored.removeColor(item);
                     }
@@ -250,7 +248,7 @@ public class WorkbenchScreen extends AbstractContainerScreen<WorkbenchContainer>
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(graphics);
+        this.renderBackground(graphics, mouseX, mouseY, partialTicks);
         super.render(graphics, mouseX, mouseY, partialTicks);
         this.renderTooltip(graphics, mouseX, mouseY);
 
@@ -292,7 +290,7 @@ public class WorkbenchScreen extends AbstractContainerScreen<WorkbenchContainer>
     @Override
     protected void renderBg(GuiGraphics graphics, float partialTicks, int mouseX, int mouseY) {
         /* Fixes partial ticks to use percentage from 0 to 1 */
-        partialTicks = Minecraft.getInstance().getFrameTime();
+        partialTicks = Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true);
 
         int startX = this.leftPos;
         int startY = this.topPos;
@@ -347,19 +345,19 @@ public class WorkbenchScreen extends AbstractContainerScreen<WorkbenchContainer>
         GL11.glEnable(GL11.GL_SCISSOR_TEST);
         RenderUtil.scissor(startX + 8, startY + 17, 160, 70);
 
-        PoseStack modelViewStack = RenderSystem.getModelViewStack();
-        modelViewStack.pushPose();
+        org.joml.Matrix4fStack modelViewStack = RenderSystem.getModelViewStack();
+        modelViewStack.pushMatrix();
         {
             modelViewStack.translate(startX + 88, startY + 60, 100);
             modelViewStack.scale(50F, -50F, 50F);
-            modelViewStack.mulPose(Axis.XP.rotationDegrees(5F));
-            modelViewStack.mulPose(Axis.YP.rotationDegrees(Minecraft.getInstance().player.tickCount + partialTicks));
+            modelViewStack.rotate(Axis.XP.rotationDegrees(5F));
+            modelViewStack.rotate(Axis.YP.rotationDegrees(Minecraft.getInstance().player.tickCount + partialTicks));
             RenderSystem.applyModelViewMatrix();
             MultiBufferSource.BufferSource buffer = this.minecraft.renderBuffers().bufferSource();
             Minecraft.getInstance().getItemRenderer().render(currentItem, ItemDisplayContext.FIXED, false, graphics.pose(), buffer, 15728880, OverlayTexture.NO_OVERLAY, RenderUtil.getModel(currentItem));
             buffer.endBatch();
         }
-        modelViewStack.popPose();
+        modelViewStack.popMatrix();
         RenderSystem.applyModelViewMatrix();
 
         GL11.glDisable(GL11.GL_SCISSOR_TEST);

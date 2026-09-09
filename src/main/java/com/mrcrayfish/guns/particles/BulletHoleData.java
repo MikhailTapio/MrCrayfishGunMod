@@ -1,8 +1,9 @@
 package com.mrcrayfish.guns.particles;
 
-import com.mojang.brigadier.StringReader;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mrcrayfish.guns.init.ModParticleTypes;
 import net.minecraft.core.BlockPos;
@@ -10,14 +11,14 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 /**
  * Author: MrCrayfish
  */
 public class BulletHoleData implements ParticleOptions
 {
-    public static final Codec<BulletHoleData> CODEC = RecordCodecBuilder.create((builder) -> {
+    public static final MapCodec<BulletHoleData> CODEC = RecordCodecBuilder.mapCodec((builder) -> {
         return builder.group(Codec.INT.fieldOf("dir").forGetter((data) -> {
             return data.direction.ordinal();
         }), Codec.LONG.fieldOf("pos").forGetter((p_239806_0_) -> {
@@ -25,24 +26,9 @@ public class BulletHoleData implements ParticleOptions
         })).apply(builder, BulletHoleData::new);
     });
 
-    public static final ParticleOptions.Deserializer<BulletHoleData> DESERIALIZER = new ParticleOptions.Deserializer<BulletHoleData>()
-    {
-        @Override
-        public BulletHoleData fromCommand(ParticleType<BulletHoleData> particleType, StringReader reader) throws CommandSyntaxException
-        {
-            reader.expect(' ');
-            int dir = reader.readInt();
-            reader.expect(' ');
-            long pos = reader.readLong();
-            return new BulletHoleData(dir, pos);
-        }
-
-        @Override
-        public BulletHoleData fromNetwork(ParticleType<BulletHoleData> particleType, FriendlyByteBuf buffer)
-        {
-            return new BulletHoleData(buffer.readInt(), buffer.readLong());
-        }
-    };
+    public static final StreamCodec<RegistryFriendlyByteBuf, BulletHoleData> STREAM_CODEC = StreamCodec.of(
+        (buffer, data) -> data.writeToNetwork(buffer),
+        buffer -> new BulletHoleData(buffer.readEnum(Direction.class), buffer.readBlockPos()));
 
     private final Direction direction;
     private final BlockPos pos;
@@ -75,20 +61,18 @@ public class BulletHoleData implements ParticleOptions
         return ModParticleTypes.BULLET_HOLE.get();
     }
 
-    @Override
     public void writeToNetwork(FriendlyByteBuf buffer)
     {
         buffer.writeEnum(this.direction);
         buffer.writeBlockPos(this.pos);
     }
 
-    @Override
     public String writeToString()
     {
-        return ForgeRegistries.PARTICLE_TYPES.getKey(this.getType()) + " " + this.direction.getName();
+        return BuiltInRegistries.PARTICLE_TYPE.getKey(this.getType()) + " " + this.direction.getName();
     }
 
-    public static Codec<BulletHoleData> codec(ParticleType<BulletHoleData> type)
+    public static MapCodec<BulletHoleData> codec(ParticleType<BulletHoleData> type)
     {
         return CODEC;
     }

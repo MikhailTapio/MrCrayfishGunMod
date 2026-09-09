@@ -83,6 +83,6 @@ public class AttachmentSlot extends Slot
     public boolean mayPickup(Player player)
     {
         ItemStack itemstack = this.getItem();
-        return (itemstack.isEmpty() || player.isCreative() || !EnchantmentHelper.hasBindingCurse(itemstack)) && super.mayPickup(player);
+        return (itemstack.isEmpty() || player.isCreative() || !EnchantmentHelper.has(itemstack, net.minecraft.world.item.enchantment.EnchantmentEffectComponents.PREVENT_ARMOR_CHANGE)) && super.mayPickup(player);
     }
 }

@@ -21,8 +21,8 @@ import javax.annotation.Nullable;
 @Deprecated(since = "1.3.0", forRemoval = true)
 public class LongScopeModel implements IOverrideModel
 {
-    private static final ResourceLocation RETICLE = new ResourceLocation(Reference.MOD_ID, "textures/effect/long_scope_reticle.png");
-    private static final ResourceLocation VIGNETTE = new ResourceLocation(Reference.MOD_ID, "textures/effect/scope_vignette.png");
+    private static final ResourceLocation RETICLE = ResourceLocation.fromNamespaceAndPath(Reference.MOD_ID, "textures/effect/long_scope_reticle.png");
+    private static final ResourceLocation VIGNETTE = ResourceLocation.fromNamespaceAndPath(Reference.MOD_ID, "textures/effect/scope_vignette.png");
 
     @Override
     public void render(float partialTicks, ItemDisplayContext display, ItemStack stack, ItemStack parent, @Nullable LivingEntity entity, PoseStack poseStack, MultiBufferSource renderTypeBuffer, int light, int overlay)

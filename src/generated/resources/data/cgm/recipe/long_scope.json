@@ -1,0 +1,21 @@
+{
+  "type": "cgm:workbench",
+  "materials": [
+    {
+      "count": 6,
+      "tag": "c:nuggets/iron"
+    },
+    {
+      "count": 2,
+      "tag": "c:gems/amethyst"
+    },
+    {
+      "count": 1,
+      "tag": "c:dyes/black"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "cgm:long_scope"
+  }
+}

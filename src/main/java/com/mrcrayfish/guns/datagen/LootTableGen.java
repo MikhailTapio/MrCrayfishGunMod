@@ -5,6 +5,8 @@ import com.google.common.collect.ImmutableSet;
 import com.mrcrayfish.guns.Reference;
 import com.mrcrayfish.guns.init.ModBlocks;
 import net.minecraft.data.PackOutput;
+import net.minecraft.core.HolderLookup;
+import java.util.concurrent.CompletableFuture;
 import net.minecraft.data.loot.BlockLootSubProvider;
 import net.minecraft.data.loot.LootTableProvider;
 import net.minecraft.resources.ResourceLocation;
@@ -13,7 +15,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.ValidationContext;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.Collections;
 import java.util.Map;
@@ -22,19 +24,16 @@ import java.util.stream.Collectors;
 
 public class LootTableGen extends LootTableProvider
 {
-    public LootTableGen(PackOutput output)
+    public LootTableGen(PackOutput output, CompletableFuture<HolderLookup.Provider> registries)
     {
-        super(output, Collections.emptySet(), ImmutableList.of(new LootTableProvider.SubProviderEntry(BlockProvider::new, LootContextParamSets.BLOCK)));
+        super(output, Collections.emptySet(), ImmutableList.of(new LootTableProvider.SubProviderEntry(BlockProvider::new, LootContextParamSets.BLOCK)), registries);
     }
-
-    @Override
-    protected void validate(Map<ResourceLocation, LootTable> map, ValidationContext context) {}
 
     private static class BlockProvider extends BlockLootSubProvider
     {
-        protected BlockProvider()
+        protected BlockProvider(HolderLookup.Provider registries)
         {
-            super(ImmutableSet.of(), FeatureFlags.REGISTRY.allFlags());
+            super(ImmutableSet.of(), FeatureFlags.REGISTRY.allFlags(), registries);
         }
 
         @Override
@@ -46,7 +45,7 @@ public class LootTableGen extends LootTableProvider
         @Override
         protected Iterable<Block> getKnownBlocks()
         {
-            return ForgeRegistries.BLOCKS.getValues().stream().filter(block -> Reference.MOD_ID.equals(Objects.requireNonNull(ForgeRegistries.BLOCKS.getKey(block)).getNamespace())).collect(Collectors.toSet());
+            return BuiltInRegistries.BLOCK.stream().filter(block -> Reference.MOD_ID.equals(Objects.requireNonNull(BuiltInRegistries.BLOCK.getKey(block)).getNamespace())).collect(Collectors.toSet());
         }
     }
 }

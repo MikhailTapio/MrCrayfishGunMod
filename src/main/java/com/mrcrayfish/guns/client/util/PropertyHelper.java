@@ -1,5 +1,7 @@
 package com.mrcrayfish.guns.client.util;
 
+import com.mrcrayfish.guns.util.GunItemData;
+
 import com.mrcrayfish.framework.api.client.FrameworkClientAPI;
 import com.mrcrayfish.framework.api.serialize.DataArray;
 import com.mrcrayfish.framework.api.serialize.DataNumber;
@@ -235,7 +237,7 @@ public final class PropertyHelper
     public static int getReticleColor(ItemStack stack)
     {
         // Prioritise getting the reticle colour from the ItemStack tag
-        CompoundTag tag = stack.getTag();
+        CompoundTag tag = GunItemData.getTag(stack);
         if(tag != null && tag.contains("ReticleColor", Tag.TAG_INT))
         {
             return tag.getInt("ReticleColor");

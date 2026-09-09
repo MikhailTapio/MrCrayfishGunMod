@@ -33,7 +33,7 @@ public class GrenadeItem extends AmmoItem
     }
 
     @Override
-    public int getUseDuration(ItemStack stack)
+    public int getUseDuration(ItemStack stack, LivingEntity entity)
     {
         return this.maxCookTime;
     }
@@ -44,7 +44,7 @@ public class GrenadeItem extends AmmoItem
         if(!this.canCook())
             return;
 
-        int duration = this.getUseDuration(stack) - count;
+        int duration = this.getUseDuration(stack, player) - count;
         if(duration == 10)
             player.level().playLocalSound(player.getX(), player.getY(), player.getZ(), ModSounds.ITEM_GRENADE_PIN.get(), SoundSource.PLAYERS, 1.0F, 1.0F, false);
     }
@@ -79,7 +79,7 @@ public class GrenadeItem extends AmmoItem
     {
         if(!worldIn.isClientSide())
         {
-            int duration = this.getUseDuration(stack) - timeLeft;
+            int duration = this.getUseDuration(stack, entityLiving) - timeLeft;
             if(duration >= 10)
             {
                 if(!(entityLiving instanceof Player) || !((Player) entityLiving).isCreative())

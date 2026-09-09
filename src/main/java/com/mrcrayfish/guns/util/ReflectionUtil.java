@@ -5,7 +5,7 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.TargetBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
+import net.neoforged.fml.util.ObfuscationReflectionHelper;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -15,7 +15,7 @@ import java.lang.reflect.Method;
  */
 public class ReflectionUtil
 {
-    private static final Method updateRedstoneOutputMethod = ObfuscationReflectionHelper.findMethod(TargetBlock.class, "m_57391_", LevelAccessor.class, BlockState.class, BlockHitResult.class, Entity.class);
+    private static final Method updateRedstoneOutputMethod = ObfuscationReflectionHelper.findMethod(TargetBlock.class, "updateRedstoneOutput", LevelAccessor.class, BlockState.class, BlockHitResult.class, Entity.class);
 
     public static int updateTargetBlock(TargetBlock block, LevelAccessor accessor, BlockState state, BlockHitResult result, Entity entity)
     {
@@ -23,9 +23,9 @@ public class ReflectionUtil
         {
             return (int) updateRedstoneOutputMethod.invoke(block, accessor, state, result, entity);
         }
-        catch(IllegalAccessException | InvocationTargetException ignored)
+        catch(IllegalAccessException | InvocationTargetException exception)
         {
-            return 0;
+            throw new IllegalStateException("Unable to update target block", exception);
         }
     }
 }

@@ -2,13 +2,12 @@ package com.mrcrayfish.guns.common;
 
 import com.mrcrayfish.guns.Reference;
 import net.minecraft.server.MinecraftServer;
-import net.minecraftforge.common.util.LogicalSidedProvider;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.server.ServerStartedEvent;
-import net.minecraftforge.event.server.ServerStoppingEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
+import net.neoforged.neoforge.event.server.ServerStoppingEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -20,7 +19,7 @@ import java.util.List;
  * <p>
  * Author: MrCrayfish
  */
-@Mod.EventBusSubscriber(modid = Reference.MOD_ID)
+@EventBusSubscriber(modid = Reference.MOD_ID)
 public class DelayedTask
 {
     public static List<Impl> tasks = new ArrayList<>();
@@ -38,11 +37,10 @@ public class DelayedTask
     }
 
     @SubscribeEvent
-    public static void onServerTick(TickEvent.ServerTickEvent event)
+    public static void onServerTick(ServerTickEvent.Post event)
     {
-        if(event.phase != TickEvent.Phase.START)
         {
-            MinecraftServer server = (MinecraftServer) LogicalSidedProvider.WORKQUEUE.get(LogicalSide.SERVER);
+            MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
             Iterator<Impl> it = tasks.iterator();
             while(it.hasNext())
             {
@@ -64,7 +62,7 @@ public class DelayedTask
      */
     public static void runAfter(int ticks, Runnable run)
     {
-        MinecraftServer server = (MinecraftServer) LogicalSidedProvider.WORKQUEUE.get(LogicalSide.SERVER);
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         if(!server.isSameThread())
         {
             throw new IllegalStateException("Tried to add a delayed task off the main thread");

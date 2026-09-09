@@ -1,5 +1,7 @@
 package com.mrcrayfish.guns.client;
 
+import com.mrcrayfish.guns.util.GunItemData;
+
 import com.mrcrayfish.guns.GunMod;
 import com.mrcrayfish.guns.client.handler.*;
 import com.mrcrayfish.guns.client.render.gun.ModelOverrides;
@@ -23,33 +25,29 @@ import com.mrcrayfish.guns.network.message.C2SMessageAttachments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.color.item.ItemColor;
 import net.minecraft.client.gui.components.OptionsList;
-import net.minecraft.client.gui.screens.MenuScreens;
-import net.minecraft.client.gui.screens.MouseSettingsScreen;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
+import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
+import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
+import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
+import net.minecraft.client.gui.screens.options.MouseSettingsScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.Tag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
-import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.EnchantedBookItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.EnchantmentInstance;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.InputEvent;
-import net.minecraftforge.client.event.ModelEvent;
-import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
-import net.minecraftforge.client.event.ScreenEvent;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.client.event.InputEvent;
+import net.neoforged.neoforge.client.event.ModelEvent;
+import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
+import net.neoforged.neoforge.client.event.ScreenEvent;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.util.ObfuscationReflectionHelper;
+import net.minecraft.core.registries.BuiltInRegistries;
 import org.lwjgl.glfw.GLFW;
 
 import java.lang.reflect.Field;
@@ -59,31 +57,25 @@ import static com.mrcrayfish.guns.Reference.MOD_ID;
 /**
  * Author: MrCrayfish
  */
-@Mod.EventBusSubscriber(modid = MOD_ID, value = Dist.CLIENT)
+@EventBusSubscriber(modid = MOD_ID, value = Dist.CLIENT)
 public class ClientHandler {
     private static Field mouseOptionsField;
 
     public static void setup() {
-        MinecraftForge.EVENT_BUS.register(AimingHandler.get());
-        MinecraftForge.EVENT_BUS.register(BulletTrailRenderingHandler.get());
-        MinecraftForge.EVENT_BUS.register(CrosshairHandler.get());
-        MinecraftForge.EVENT_BUS.register(GunRenderingHandler.get());
-        MinecraftForge.EVENT_BUS.register(RecoilHandler.get());
-        MinecraftForge.EVENT_BUS.register(ReloadHandler.get());
-        MinecraftForge.EVENT_BUS.register(ShootingHandler.get());
-        MinecraftForge.EVENT_BUS.register(SoundHandler.get());
-        MinecraftForge.EVENT_BUS.register(new PlayerModelHandler());
+        NeoForge.EVENT_BUS.register(AimingHandler.get());
+        NeoForge.EVENT_BUS.register(BulletTrailRenderingHandler.get());
+        NeoForge.EVENT_BUS.register(CrosshairHandler.get());
+        NeoForge.EVENT_BUS.register(GunRenderingHandler.get());
+        NeoForge.EVENT_BUS.register(RecoilHandler.get());
+        NeoForge.EVENT_BUS.register(ReloadHandler.get());
+        NeoForge.EVENT_BUS.register(ShootingHandler.get());
+        NeoForge.EVENT_BUS.register(SoundHandler.get());
+        NeoForge.EVENT_BUS.register(new PlayerModelHandler());
 
-        /* Only register controller events if Controllable is loaded otherwise it will crash */
-        if (GunMod.controllableLoaded) {
-            ControllerHandler.init();
-            GunButtonBindings.register();
-        }
-
+        // TODO: restore Controllable integration for NeoForge 1.21.1.
         setupRenderLayers();
         registerColors();
         registerModelOverrides();
-        registerScreenFactories();
     }
 
     private static void setupRenderLayers() {
@@ -95,8 +87,8 @@ public class ClientHandler {
             if (!IColored.isDyeable(stack)) {
                 return -1;
             }
-            if (index == 0 && stack.hasTag() && stack.getTag().contains("Color", Tag.TAG_INT)) {
-                return stack.getTag().getInt("Color");
+            if (index == 0 && GunItemData.hasTag(stack) && GunItemData.getTag(stack).contains("Color", Tag.TAG_INT)) {
+                return GunItemData.getTag(stack).getInt("Color");
             }
             if (index == 0 && stack.getItem() instanceof IAttachment) {
                 ItemStack renderingWeapon = GunRenderingHandler.get().getRenderingWeapon();
@@ -110,7 +102,7 @@ public class ClientHandler {
             }
             return -1;
         };
-        ForgeRegistries.ITEMS.forEach(item -> {
+        BuiltInRegistries.ITEM.forEach(item -> {
             if (item instanceof IColored) {
                 Minecraft.getInstance().getItemColors().register(color, item);
             }
@@ -130,16 +122,27 @@ public class ClientHandler {
         ModelOverrides.register(ModItems.SHOTGUN.get(), new SimpleModel(SpecialModels.SHOTGUN::getModel));
     }
 
-    private static void registerScreenFactories() {
-        MenuScreens.register(ModContainers.WORKBENCH.get(), WorkbenchScreen::new);
-        MenuScreens.register(ModContainers.ATTACHMENTS.get(), AttachmentScreen::new);
+    public static void registerScreenFactories(RegisterMenuScreensEvent event) {
+        event.register(ModContainers.WORKBENCH.get(), WorkbenchScreen::new);
+        event.register(ModContainers.ATTACHMENTS.get(), AttachmentScreen::new);
+    }
+
+    public static void registerItemExtensions(RegisterClientExtensionsEvent event) {
+        IClientItemExtensions extensions = new IClientItemExtensions() {
+            private final GunItemStackRenderer renderer = new GunItemStackRenderer();
+            @Override
+            public BlockEntityWithoutLevelRenderer getCustomRenderer() { return renderer; }
+        };
+        ModItems.REGISTER.getEntries().forEach(item -> {
+            if(item.get() instanceof GunItem) event.registerItem(extensions, item.get());
+        });
     }
 
     @SubscribeEvent
     public static void onScreenInit(ScreenEvent.Init.Post event) {
         if (event.getScreen() instanceof MouseSettingsScreen screen) {
             if (mouseOptionsField == null) {
-                mouseOptionsField = ObfuscationReflectionHelper.findField(MouseSettingsScreen.class, "f_96218_");
+                mouseOptionsField = ObfuscationReflectionHelper.findField(net.minecraft.client.gui.screens.options.OptionsSubScreen.class, "list");
                 mouseOptionsField.setAccessible(true);
             }
             try {
@@ -173,39 +176,13 @@ public class ClientHandler {
     }
 
     public static void registerAdditional(ModelEvent.RegisterAdditional event) {
-        event.register(new ResourceLocation(MOD_ID, "special/test"));
+        event.register(net.minecraft.client.resources.model.ModelResourceLocation.standalone(ResourceLocation.fromNamespaceAndPath(MOD_ID, "special/test")));
     }
 
-    public static void registerCreativeTab(IEventBus bus) {
-        DeferredRegister<CreativeModeTab> register = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MOD_ID);
-        CreativeModeTab.Builder builder = CreativeModeTab.builder();
-        builder.title(Component.translatable("itemGroup." + MOD_ID));
-        builder.icon(() -> {
-            ItemStack stack = new ItemStack(ModItems.PISTOL.get());
-            stack.getOrCreateTag().putBoolean("IgnoreAmmo", true);
-            return stack;
-        });
-        builder.displayItems((flags, output) ->
-        {
-            ModItems.REGISTER.getEntries().forEach(registryObject ->
-            {
-                if (registryObject.get() instanceof GunItem item) {
-                    ItemStack stack = new ItemStack(item);
-                    stack.getOrCreateTag().putInt("AmmoCount", item.getGun().getGeneral().getMaxAmmo());
-                    output.accept(stack);
-                    return;
-                }
-                output.accept(registryObject.get());
-            });
-            CustomGunManager.fill(output);
-            for (Enchantment enchantment : ForgeRegistries.ENCHANTMENTS) {
-                if (enchantment.category == EnchantmentTypes.GUN || enchantment.category == EnchantmentTypes.SEMI_AUTO_GUN) {
-                    output.accept(EnchantedBookItem.createForEnchantment(new EnchantmentInstance(enchantment, enchantment.getMaxLevel())), CreativeModeTab.TabVisibility.PARENT_TAB_ONLY);
-                }
-            }
-        });
-        register.register("creative_tab", builder::build);
-        register.register(bus);
+    public static void onCreativeTabContents(net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent event) {
+        if (event.getTabKey().location().equals(ResourceLocation.fromNamespaceAndPath(MOD_ID, "creative_tab"))) {
+            CustomGunManager.fill(event);
+        }
     }
 
     public static Screen createEditorScreen(IEditorMenu menu) {

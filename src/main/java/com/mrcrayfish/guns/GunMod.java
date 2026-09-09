@@ -10,8 +10,6 @@ import com.mrcrayfish.guns.client.handler.CrosshairHandler;
 import com.mrcrayfish.guns.common.BoundingBoxManager;
 import com.mrcrayfish.guns.common.NetworkGunManager;
 import com.mrcrayfish.guns.common.ProjectileManager;
-import com.mrcrayfish.guns.compat.SimplePlanesHelper;
-import com.mrcrayfish.guns.crafting.WorkbenchIngredient;
 import com.mrcrayfish.guns.datagen.*;
 import com.mrcrayfish.guns.entity.GrenadeEntity;
 import com.mrcrayfish.guns.entity.MissileEntity;
@@ -21,20 +19,18 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.crafting.CraftingHelper;
-import net.minecraftforge.common.data.ExistingFileHelper;
-import net.minecraftforge.data.event.GatherDataEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.common.data.ExistingFileHelper;
+import net.neoforged.neoforge.data.event.GatherDataEvent;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.fml.ModList;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -54,42 +50,42 @@ public class GunMod
     public static boolean cmdCamLoaded = false;
     public static final Logger LOGGER = LogManager.getLogger(Reference.MOD_ID);
 
-    public GunMod()
+    public GunMod(IEventBus bus, ModContainer container)
     {
-        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, Config.clientSpec);
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.commonSpec);
-        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, Config.serverSpec);
-        IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
+        container.registerConfig(ModConfig.Type.CLIENT, Config.clientSpec);
+        container.registerConfig(ModConfig.Type.COMMON, Config.commonSpec);
+        container.registerConfig(ModConfig.Type.SERVER, Config.serverSpec);
         ModBlocks.REGISTER.register(bus);
         ModContainers.REGISTER.register(bus);
         ModEffects.REGISTER.register(bus);
-        ModEnchantments.REGISTER.register(bus);
         ModEntities.REGISTER.register(bus);
         ModItems.REGISTER.register(bus);
+        ModDataComponents.REGISTER.register(bus);
         ModParticleTypes.REGISTER.register(bus);
         ModRecipeSerializers.REGISTER.register(bus);
         ModRecipeTypes.REGISTER.register(bus);
         ModSounds.REGISTER.register(bus);
         ModTileEntities.REGISTER.register(bus);
         bus.addListener(this::onCommonSetup);
-        bus.addListener(this::onClientSetup);
+        ModCreativeTabs.register(bus);
         bus.addListener(this::onGatherData);
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
+        if(FMLEnvironment.dist == Dist.CLIENT) {
             FrameworkClientAPI.registerDataLoader(MetaLoader.getInstance());
-            ClientHandler.registerCreativeTab(bus);
+            bus.addListener(this::onClientSetup);
+            bus.addListener(ClientHandler::onCreativeTabContents);
             bus.addListener(KeyBinds::registerKeyMappings);
             bus.addListener(CrosshairHandler::onConfigReload);
             bus.addListener(ClientHandler::onRegisterReloadListener);
             bus.addListener(ClientHandler::registerAdditional);
-        });
-        controllableLoaded = ModList.get().isLoaded("controllable");
+            bus.addListener(ClientHandler::registerScreenFactories);
+            bus.addListener(ClientHandler::registerItemExtensions);
+        }
         curiosLoaded = ModList.get().isLoaded("curios");
         backpackedLoaded = ModList.get().isLoaded("backpacked");
-        playerReviveLoaded = ModList.get().isLoaded("playerrevive");
         sopLoaded = ModList.get().isLoaded("sophisticatedbackpacks");
         travelersBackpackLoaded = ModList.get().isLoaded("travelersbackpack");
         l2BackpackLoaded = ModList.get().isLoaded("l2backpack");
-        cmdCamLoaded = ModList.get().isLoaded("cmdcam");
+        // TODO: restore Controllable, PlayerRevive and CMDCam integration for NeoForge 1.21.1.
     }
 
     private void onCommonSetup(FMLCommonSetupEvent event)
@@ -100,16 +96,13 @@ public class GunMod
             FrameworkAPI.registerSyncedDataKey(ModSyncedDataKeys.AIMING);
             FrameworkAPI.registerSyncedDataKey(ModSyncedDataKeys.RELOADING);
             FrameworkAPI.registerSyncedDataKey(ModSyncedDataKeys.SHOOTING);
-            FrameworkAPI.registerLoginData(new ResourceLocation(Reference.MOD_ID, "network_gun_manager"), NetworkGunManager.LoginData::new);
-            FrameworkAPI.registerLoginData(new ResourceLocation(Reference.MOD_ID, "custom_gun_manager"), CustomGunManager.LoginData::new);
-            CraftingHelper.register(new ResourceLocation(Reference.MOD_ID, "workbench_ingredient"), WorkbenchIngredient.Serializer.INSTANCE);
             ProjectileManager.getInstance().registerFactory(ModItems.GRENADE.get(), (worldIn, entity, weapon, item, modifiedGun) -> new GrenadeEntity(ModEntities.GRENADE.get(), worldIn, entity, weapon, item, modifiedGun));
             ProjectileManager.getInstance().registerFactory(ModItems.MISSILE.get(), (worldIn, entity, weapon, item, modifiedGun) -> new MissileEntity(ModEntities.MISSILE.get(), worldIn, entity, weapon, item, modifiedGun));
             if(Config.COMMON.gameplay.improvedHitboxes.get())
             {
-                MinecraftForge.EVENT_BUS.register(new BoundingBoxManager());
+                NeoForge.EVENT_BUS.register(new BoundingBoxManager());
             }
-            if (ModList.get().isLoaded("simpleplanes")) SimplePlanesHelper.init();
+            // TODO: restore Simple Planes integration for NeoForge 1.21.1.
         });
     }
 
@@ -125,11 +118,12 @@ public class GunMod
         CompletableFuture<HolderLookup.Provider> lookupProvider = event.getLookupProvider();
         ExistingFileHelper existingFileHelper = event.getExistingFileHelper();
         BlockTagGen blockTagGen = new BlockTagGen(output, lookupProvider, existingFileHelper);
-        generator.addProvider(event.includeServer(), new RecipeGen(output));
-        generator.addProvider(event.includeServer(), new LootTableGen(output));
+        generator.addProvider(event.includeServer(), new RecipeGen(output, lookupProvider));
+        generator.addProvider(event.includeServer(), new LootTableGen(output, lookupProvider));
         generator.addProvider(event.includeServer(), blockTagGen);
         generator.addProvider(event.includeServer(), new ItemTagGen(output, lookupProvider, blockTagGen.contentsGetter(), existingFileHelper));
         generator.addProvider(event.includeServer(), new GunGen(output, lookupProvider));
+        generator.addProvider(event.includeServer(), new com.mrcrayfish.guns.datagen.EnchantmentGen(output));
         //generator.addProvider(event.includeServer(), new DamageTypeGen(output, lookupProvider, existingFileHelper));
     }
 

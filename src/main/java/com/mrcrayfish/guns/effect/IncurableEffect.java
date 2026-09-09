@@ -2,7 +2,9 @@ package com.mrcrayfish.guns.effect;
 
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.neoforged.neoforge.common.EffectCure;
+import java.util.Set;
 
 import java.util.Collections;
 import java.util.List;
@@ -18,9 +20,9 @@ public class IncurableEffect extends MobEffect
     }
 
     @Override
-    public List<ItemStack> getCurativeItems()
+    public void fillEffectCures(Set<EffectCure> cures, MobEffectInstance effect)
     {
-        return Collections.emptyList();
+        cures.clear();
     }
 
 
